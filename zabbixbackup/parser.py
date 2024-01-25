@@ -16,6 +16,7 @@ defaults.zabbix_config        = "/etc/zabbix/zabbix_server.conf"
 
 defaults.read_mysql_config    = False
 defaults.mysql_config         = Path("/etc/mysql/my.cnf")
+
 defaults.dry_run              = False
 
 defaults.host                 = "127.0.0.1"
