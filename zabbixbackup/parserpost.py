@@ -3,9 +3,20 @@ from collections import defaultdict
 from pathlib import Path
 import logging
 from types import SimpleNamespace as NS
+from getpass import getpass
+import sys
 
 
 __all__ = ["postprocess"]
+
+
+# Shouldn't have done that.. it works.. I hope
+logging.VERBOSE= 17
+logging.addLevelName(17, "VERBOSE")
+def _verbose(msg, *args, **kwargs):
+    logging.log(logging.VERBOSE, msg, *args, **kwargs)
+logging.verbose = _verbose
+logger = logging.getLogger()
 
 
 def postprocess(parser, user_args, def_args):
@@ -18,13 +29,13 @@ def postprocess(parser, user_args, def_args):
     # def_args: only defaults via argparse
     # local
 
-    # The final arguments are stored in args directly and the precedence order is:
+    # The final arguments are stored in args directly, the precedence order is:
     #
     #   1. user provided
     #   2. from configuration files
-    #   3. from the defaults of the configuration files
+    #   3. from configuration files defaults
     #   4. from the last shipped default configuration files
-    #   4. from this script default
+    #   5. from this script default
     #
     # I.e. CLI arguments are the most important.
     
@@ -38,8 +49,8 @@ def postprocess(parser, user_args, def_args):
     if user_args.sock == "-":
         user_args.sock = ""
 
-    # Port number: special case. To show mysql and psql default values in the help is passed
-    # unchecked as a string. Actual conversion and defaults are handled here
+    # Port number: special case. To show mysql and psql default values in the help,
+    # the value is stored unchecked as a string. Actual conversion and defaults are handled here
     _handle_port(parser, user_args, def_args)
 
     # Implicit read from zabbix config if a file is provided
@@ -50,6 +61,10 @@ def postprocess(parser, user_args, def_args):
     if user_args.mysql_config:
         user_args.read_mysql_config = True
 
+    # Implicit save_files if files is provided
+    if user_args.files:
+        user_args.save_files = True
+
     # User provided values
     for key, value in vars(user_args).items():
         if value is not None:
@@ -57,7 +72,10 @@ def postprocess(parser, user_args, def_args):
 
     # Add zabbix configuration values to local_args
     if user_args.read_zabbix_config:
-        _handle_zabbix_conf(parser, user_args, local_args)
+        zbx_config = user_args.zbx_config
+        if zbx_config is None:
+            def_args.zabbix_config
+        _handle_zabbix_conf(zbx_config, local_args)
 
     # Add default args from this script to local_args
     for key, value in vars(def_args).items():
@@ -68,13 +86,18 @@ def postprocess(parser, user_args, def_args):
     for key, values in local_args.items():
         setattr(args, key, values[0])
 
+    # Prompt for password if necessary
+    if args.passwd == "-":
+        print("(echo disabled for password input)", file=sys.stderr)
+        args.passwd = getpass("password: ")
+
     # Clean parameters based on dbms selection
     _handle_dbms_selection(parser, user_args, args)
 
     if args.rotate < 0:
         raise parser.error(f"Rotate must be 0 or positive: {args.rotate!r}")
 
-    # Collapse verbosity to a single variable
+    # Collapse verbosity to a single variable ('verbosity')
     _handle_verbosity(parser, args)
 
     # Checks whether the output directory is a directory or 
@@ -101,13 +124,13 @@ def _handle_port(parser, user_args, def_args):
             raise parser.error(f"Port must be between 1024 and 65535: {user_args.port!r}")
 
 
-def _handle_zabbix_conf(parser, user_args, local_args):
+def _handle_zabbix_conf(zbx_config, local_args):
     # We read last shipped configuration defaults + local configuration default (zdefconfig)
     # and proper configuration values (zconfig).
     last_shipped_config = Path(__file__).parent / "assets" / "zabbix_server.conf"
     defconfig = zabbix_try_read_defaults(last_shipped_config)
-    zdefconfig = zabbix_try_read_defaults(user_args.zbx_config, defconfig)
-    zconfig = zabbix_try_read_config(user_args.zbx_config)
+    zdefconfig = zabbix_try_read_defaults(zbx_config, defconfig)
+    zconfig = zabbix_try_read_config(zbx_config)
 
     zbx_var_map = (
         ("DBHost", "host", str, ),
@@ -157,16 +180,17 @@ def _handle_verbosity(parser, args):
     # Handle verbosity
     if args.quiet:
         args.verbosity = "quiet"
-        logging.getLogger().setLevel(logging.ERROR)
+        logger.setLevel(logging.ERROR)
     elif args.very_verbose:
         args.verbosity = "very"
-        logging.getLogger().setLevel(logging.INFO)
+        logger.setLevel(logging.VERBOSE)
     elif args.debug:
         args.verbosity = "debug"
-        logging.getLogger().setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
     else:
         args.verbosity = "normal"
-        logging.getLogger().setLevel(logging.WARNING)
+        logger.setLevel(logging.INFO)
+
     del args.quiet
     del args.verbose
     del args.very_verbose

@@ -11,7 +11,7 @@ from types import SimpleNamespace as NS
 defaults = NS()
 defaults.type                 = "psql"
 
-defaults.read_zabbix_config   = True
+defaults.read_zabbix_config   = False
 defaults.zabbix_config        = "/etc/zabbix/zabbix_server.conf"
 
 defaults.read_mysql_config    = False
@@ -28,10 +28,14 @@ defaults.dbname               = "zabbix"
 defaults.schema               = "public"
 defaults.rlookup              = True
 
+defaults.save_files           = True
+defaults.files                = "-"
+
 defaults.unknown              = "ignore"
+defaults.monitoring           = "nodata"
 defaults.columns              = False
 
-defaults.compression          = "gzip"
+defaults.compression          = None
 defaults.format               = "custom"
 defaults.rotate               = 0
 defaults.outdir               = Path(".")
@@ -51,7 +55,7 @@ def parse(argv):
     """
     # The double call to 'parse_args' is for properly separating user provided values from
     # script default values. In order to keep it working as expected *every* value in the parser
-    # must have a default (otherwise the next line will prompt the help screen to the user without
+    # must have a default (otherwise the next line will prompt the help screen to the user
     # regardless of real arguments). TODO: use default dict at the top and avoid this double call?
     parser = build_parser(defaults)
 

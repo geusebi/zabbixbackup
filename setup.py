@@ -32,13 +32,12 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
     ],
     keywords="zabbix, backup, configuration, postgresql, postgre, psql, mysql",
-    package_dir={"": "zabbixbackup"},
-    packages=find_packages(where="zabbixbackup"),
+    packages=["zabbixbackup"],
     python_requires=">=3.7, <4",
     install_requires=[],
     extras_require={},
     package_data={
-        "zabbix_server_conf": ["assets/zabbix_server.conf"],
+        "zabbixbackup": ["assets/zabbix_server.conf"],
     },
     entry_points={
         "console_scripts": [

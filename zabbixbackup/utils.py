@@ -1,8 +1,48 @@
 from subprocess import check_output, CalledProcessError
 from pathlib import Path
+from shlex import quote as shquote
 
 
-def exec(*args, **kwargs):
+def quote(s):
+    return shquote(str(s))
+
+
+class CurryCmd(object):
+    def __init__(self, cmd, env, env_extra):
+        merged_env = {**env, **env_extra}
+        self.cmd, self.env, self.env_extra = (
+            list(map(str, cmd)),
+            merged_env,
+            env_extra,
+        )
+
+    def exec(self, *args):
+        command = self.cmd + list(args)
+        return run(command, env=self.env)
+
+    def reprexec(self, *args):
+        rargs = map(quote, self.cmd + list(args))
+
+        str_env = " ".join((
+            f"{key}={quote(value)}"
+            for key, value
+            in self.env_extra.items()))
+
+        # Good enough
+        output = ""
+        if str_env:
+            output += str_env + " \\\n"
+        
+        output += " ".join((
+            f"\\\n    {line}" if line.startswith("-") else line for line in rargs
+        ))
+        
+        return output
+
+    __repr__ = reprexec
+
+
+def run(*args, **kwargs):
     """
     Wrapper for subprocess.check_output.
     
@@ -15,8 +55,8 @@ def exec(*args, **kwargs):
         kwargs["text"] = True
 
     try:
-        out = check_output(*args)
-    except (CalledProcessError, FileNotFoundError):
+        out = check_output(*args, **kwargs)
+    except (CalledProcessError, FileNotFoundError) as e:
         return None
 
     lines = tuple(map(str.strip, out.split("\n")))
@@ -28,8 +68,8 @@ def exec(*args, **kwargs):
 
 
 def check_binary(*names):
-    """Checks wether 'names' are all valid commands in the current shell."""
-    out = exec(("command", "-v", *names))
+    """Checks whether 'names' are all valid commands in the current shell."""
+    out = run(("command", "-v", *names))
 
     if out is None:
         return False
@@ -42,7 +82,7 @@ def try_find_sockets(search, port):
     if not check_binary("netstat"):
         return tuple()
 
-    out = exec(("netstat", "-lxn"))
+    out = run(("netstat", "-lxn"))
     sockets = []
     for line in out:
         # not perfect but it works reasonably enough

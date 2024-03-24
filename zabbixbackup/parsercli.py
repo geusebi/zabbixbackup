@@ -6,6 +6,7 @@ __all__ = ["build_parser"]
 
 
 def build_parser(defaults):
+    # TODO: add credits in the help screen
     description = "zabbix dump for mysql and psql inspired and directly translated from..."
 
     parser = argparse.ArgumentParser(
@@ -56,7 +57,7 @@ def build_parser(defaults):
 
     connection.add_argument(
         "-H", "--host",
-        help="dostname/IP of database server DBMS, to specify a blank value pass '-'.",
+        help="hostname/IP of DBMS server, to specify a blank value pass '-'.",
         default=defaults.host)
 
     connection.add_argument(
@@ -105,41 +106,63 @@ def build_parser(defaults):
 
     dump.add_argument(
         "-U", "--unknown-action",
-        help="ingore unknown tables (don't include them into the backup)",
+        help="action for unknown tables.",
         default=defaults.unknown,
-        choices=("dump", "schema", "ignore", "fail"),
+        choices=("dump", "nodata", "ignore", "fail"),
         dest="unknown")
 
     dump.add_argument(
+        "-M", "--monitoring-action",
+        help="action for monitoring table",
+        default=defaults.monitoring,
+        choices=("dump", "nodata"),
+        dest="monitoring")
+
+    dump.add_argument(
         "-N", "--add-columns",
-        help="add column names in "
-            "INSERT clauses and quote them as needed.",
+        help="add column names in INSERT clauses and quote them as needed.",
         default=defaults.columns,
         action="store_true",
         dest="columns")
 
 
-    output = parser.add_argument_group("output options")
+    files = parser.add_argument_group("configuration files")
 
-    compression_desc = """
-    set compression algorithm. xz will take longer and consume more CPU time
-    but the backup will be smaller of the same dump compressed using gzip.
-    """.strip()
+    files.add_argument(
+        "--save-files",
+        help="save folders and other files listed in this file. "
+            "One line per folder or file, non existant will be ignored. "
+            "Directory structure is replicated (copied via 'cp')."
+            "If '-' is passed then standard directories are copied "
+            "(/etc/zabbix, /usr/lib/zabbix).",
+        default=defaults.save_files,
+        action="store_true")
+
+    files.add_argument(
+        "--files",
+        help="save folders and other files listed in this 'files'. "
+            "One line per folder or file, non existant will be ignored. "
+            "Directory structure is replicated (copied via 'cp')."
+            "If '-' is passed then standard directories are copied.",
+        default=defaults.save_files,
+        type=Path)
+
+    output = parser.add_argument_group("output options")
 
     output.add_argument(
         "-x", "--compression",
-        help=compression_desc,
-        default=defaults.compression,
-        choices=("gzip", "xz", "none"))
+        help="PostgreSQL specific: passed as-is to pg_dump --compress, might be implied by format.",
+        default=defaults.compression)
 
     output.add_argument(
         "-f", "--format",
-        help="PostgreSQL specific: custom dump format",
+        help="PostgreSQL specific: custom dump format, will mandate the file output format.",
+        choices={"plain", "custom", "directory", "tar"},
         default=defaults.format)
 
     output.add_argument(
         "-r", "--rotate",
-        help="rotate backups while keeping up to 'R' old backups. "
+        help="rotate backups while keeping up 'R' old backups."
             "Uses filename to match '0=keep everything'.",
         default=defaults.rotate,
         type=int)
@@ -153,8 +176,10 @@ def build_parser(defaults):
 
     verbosity = parser.add_argument_group("verbosity")
     verbosity_group = verbosity.add_mutually_exclusive_group()
-    # In case its needed to change the default value for this group 'postprocess' must be
-    # modified accordingly (else clause is the default during verbosity handling) 
+    # In case it is needed to change the default value for this group,
+    # 'postprocess' must be modified accordingly (else clause is the default
+    # during verbosity handling)
+    # TODO: choose what to print and in which form
     verbosity_group.add_argument(
         "-q", "--quiet",
         help="don't print anything except unrecoverable errors.",
@@ -163,19 +188,19 @@ def build_parser(defaults):
 
     verbosity_group.add_argument(
         "-v", "--verbose",
-        help="print informations",
+        help="print informations.",
         action="store_true",
         default=defaults.verbose)
 
     verbosity_group.add_argument(
         "-V", "--very-verbose",
-        help="print even more informations",
+        help="print even more informations.",
         action="store_true",
         default=defaults.very_verbose)
 
     verbosity_group.add_argument(
         "--debug",
-        help="print everything",
+        help="print everything.",
         action="store_true",
         default=defaults.debug)
 
