@@ -98,3 +98,20 @@ def try_find_sockets(search, port):
             sockets.append(path)
 
     return tuple(sockets)
+
+
+def rlookup(ip):
+    output = run(["dig", "+noall", "+answer", "-x", ip])
+    if not output:
+        return None
+
+    parts = list(map(str.strip, output.split()))
+    if len(parts) == 0:
+        return None
+    dn = parts[-1]
+
+    subdomains = dn.split(".")
+    if len(subdomains) == 0:
+        return None
+
+    return subdomains[0]
