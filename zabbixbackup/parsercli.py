@@ -10,19 +10,20 @@ def build_parser(defaults):
     description = "zabbix dump for mysql and psql inspired and directly translated from..."
 
     parser = argparse.ArgumentParser(
-        "zabbixdump",
+        "zabbixbackup",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=description)
 
     parser.add_argument(
         "-t", "--type",
-        help="database connection or autofetch via zabbix configuration file.",
+        help="select the DBMS type.",
         default=defaults.type,
         choices=("mysql", "psql"))
 
     parser.add_argument(
         "-z", "--read-zabbix-config",
-        help="try to read database host and credentials from Zabbix config.",
+        help="try to read database host and credentials from Zabbix config. "
+        "Implicit if `--zabbix-config` is set by the user.",
         action="store_true",
         default=defaults.read_zabbix_config)
 
@@ -35,7 +36,8 @@ def build_parser(defaults):
 
     parser.add_argument(
         "-c", "--read-mysql-config",
-        help="MySQL specific: Read database host and credentials from MySQL config file.",
+        help="MySQL specific: Read database host and credentials from MySQL config file. "
+        "Implicit if `--mysql-config` is set by the user.",
         action="store_true",
         default=defaults.read_mysql_config)
 
@@ -48,7 +50,8 @@ def build_parser(defaults):
     parser.add_argument(
         "-D", "--dry-run",
         help="do not create the actual backup, only show dump commands. "
-            "Be aware that the database will be queried for tables selection.",
+            "Be aware that the database will be queried for tables selection and "
+            "temporary folders and files are created.",
         default=defaults.dry_run,
         action="store_true")
 
@@ -57,7 +60,8 @@ def build_parser(defaults):
 
     connection.add_argument(
         "-H", "--host",
-        help="hostname/IP of DBMS server, to specify a blank value pass '-'.",
+        help="hostname/IP of DBMS server, to specify a blank value pass '-'. "
+            "For postgresql special rules might apply (see online documentation).",
         default=defaults.host)
 
     connection.add_argument(
@@ -80,7 +84,7 @@ def build_parser(defaults):
 
     connection.add_argument(
         "-p", "--passwd",
-        help="database login password (specify '-' for a prompt).",
+        help="database login password (specify '-' for an interactive prompt).",
         default=defaults.passwd)
 
     connection.add_argument(

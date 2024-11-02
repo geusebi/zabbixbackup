@@ -202,3 +202,4 @@ def _handle_output(parser, args):
         (args.outdir.parent.exists() and not args.outdir.parent.is_dir())
     ):
         raise parser.error(f"Output directory: cannot create or use {args.outdir!r}")
+        # TODO: move exception in caller and use logging here
