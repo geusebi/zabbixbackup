@@ -1,6 +1,6 @@
 # Zabbix backup python script
 
-*EXPERIMENTAL: DO NOT USE IN PRODUCT*
+*EXPERIMENTAL: DO NOT USE IN PRODUCTION*
 
 ## Install
 ```
