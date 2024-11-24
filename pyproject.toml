@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zabbixbackup"
+version = "0.0.1a1"
+authors = [
+  { name="Giampaolo Eusebi", email="giampaolo.eusebi@gmail.com" },
+]
+
+description = "Zabbix database backup utility for postgres and mysql"
+readme = {file = "README.md", content-type = "text/markdown"}
+
+classifiers = [
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: System Administrators",
+        "Topic :: Database",
+        "Topic :: System :: Recovery Tools",
+        "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3 :: Only",
+]
+
+keywords = ["zabbix", "backup", "configuration", "postgresql", "postgre", "psql", "mysql"]
+requires-python = ">= 3.7"
+
+[project.urls]
+Homepage = "https://github.com/geusebi/zabbixbackup"
+Issues = "https://github.com/geusebi/zabbixbackup/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+zabbixbackup = ["assets/zabbix_server.conf", "assets/files"]
