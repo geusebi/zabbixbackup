@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zabbixbackup"
-version = "0.0.1b1"
+version = "0.0.1a3"
 authors = [
   { name="Giampaolo Eusebi", email="giampaolo.eusebi@gmail.com" },
 ]
@@ -13,7 +13,7 @@ description = "Zabbix database backup utility for postgres and mysql"
 readme = {file = "README.md", content-type = "text/markdown"}
 
 classifiers = [
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Information Technology",
         "Intended Audience :: System Administrators",
         "Topic :: Database",
