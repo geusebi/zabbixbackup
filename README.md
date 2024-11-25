@@ -1,6 +1,10 @@
 # Zabbix backup python script
 
-*EXPERIMENTAL: DO NOT USE IN PRODUCTION*
+*EXPERIMENTAL: use at your own risk!*
+
+Python script to perform zabbix dumps.
+
+Inspired by the project https://github.com/npotorino/zabbix-backup.
 
 ## Install
 ```
