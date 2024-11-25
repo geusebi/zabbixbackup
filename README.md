@@ -46,13 +46,13 @@ DBMS:
 - [--dry-run](#dry-run)
 
 **Connection**
-- [--host HOST](#host) (special for Postgre)
+- [--host HOST](#host) (special for Postgres)
 - [--port PORT](#port)
 - [--sock SOCK](#sock) (MySQL specific)
 - [--username USER](#user)
 - [--passwd PASSWD](#passwd)
 - [--database DBNAME](#dbname)
-- [--schema SCHEMA](#schema) (Postgre specific)
+- [--schema SCHEMA](#schema) (Postgres specific)
 - [--reverse-lookup](#reverse-lookup) (NOT IMPLEMENTED)
 
 **Dump**
@@ -65,8 +65,8 @@ DBMS:
 - [--files FILES](#files)
 
 **Output**
-- [--compression](#compression) (Postgre specific)
-- [--format](#format) (Postgre specific)
+- [--compression](#compression) (Postgres specific)
+- [--format](#format) (Postgres specific)
 - [--archive](#archive)
 - [--outdir](#outdir)
 - [--rotate](#rotate)
@@ -261,7 +261,7 @@ if `FILES` is `-` then the standard files are selected, i.e:
 ```
 
 <a name="compression"></a>
-### Postgre dump compression
+### Postgres dump compression
 **```--compression COMPRESSION```**
 
 _Default: 'None'_
@@ -269,14 +269,14 @@ _Default: 'None'_
 Passed as-is to pg_dump --compress, might be implied by format.
 
 <a name="format"></a>
-### Postgre dump format
+### Postgres dump format
 **```--format FORMAT```**
 
 _Default: 'custom'_
 
 Dump format, will mandate the file output format.
 
-Available formats: plain, custom, directory, or tar (see postgre documentation).
+Available formats: plain, custom, directory, or tar (see postgres documentation).
 
 <a name="archive"></a>
 ### Backup archive format
