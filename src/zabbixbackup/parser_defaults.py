@@ -16,6 +16,8 @@ class PSqlArgs(object):
     port: int                = 5432
     user: str                = "zabbix"
     passwd: str              = None
+    keeploginfile: bool      = False
+    loginfile: Path|None     = None
     dbname: str              = "zabbix"
     schema: str              = "public"
     rlookup: bool            = True
@@ -42,7 +44,7 @@ class PSqlArgs(object):
 
 PSqlArgs._keys = [
     "read_zabbix_config", "zabbix_config",
-    "host", "port", "user", "passwd",
+    "host", "port", "user", "passwd", "keeplogin", "loginfile",
     "dbname", "schema", "rlookup",
     "save_files", "files",
     "unknown", "monitoring",
@@ -64,7 +66,9 @@ class MySqlArgs(object):
     port: int                = 3306
     sock: Path|None          = None
     user: str                = "zabbix"
-    passwd: str              = "-"
+    passwd: str              = None
+    keeploginfile: bool      = False
+    loginfile: Path|None     = None
     dbname: str              = "zabbix"
     rlookup: bool            = True
 
@@ -88,7 +92,7 @@ class MySqlArgs(object):
 
 MySqlArgs._keys = [
     "read_zabbix_config", "zabbix_config", "read_mysql_config", "mysql_config",
-    "host", "port", "sock", "user", "passwd",
+    "host", "port", "sock", "user", "passwd", "keeploginfile", "loginfile",
     "dbname", "rlookup",
     "save_files", "files",
     "unknown", "monitoring",

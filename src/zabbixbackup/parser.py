@@ -179,6 +179,22 @@ def build_sub_parser(args):
         help="database login password (specify '-' for an interactive prompt).",
         default=args.passwd)
 
+    login_file = ".pgpass" if dbms == "psql" else "mylogin.cnf" 
+    connection.add_argument(
+        "--keep-login-file",
+        help=f"if a credential file is created ({login_file}) do not "
+            "delete it on exit.",
+        action="store_true",
+        default=args.keeploginfile,
+        dest="keeploginfile")
+
+
+    connection.add_argument(
+        "--login-file",
+        help=f"use '{login_file}' file for the authentication.",
+        default=args.loginfile,
+        dest="loginfile")
+
     connection.add_argument(
         "-d", "--database",
         help="database name.",

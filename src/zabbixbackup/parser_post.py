@@ -78,7 +78,7 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
     _handle_output(args)
 
     # Prompt for password if necessary (do it last to fail early on other arguments)
-    if args.passwd == "-":
+    if args.loginfile is None and args.passwd == "-":
         print("(echo disabled for password input)", file=sys.stderr)
         args.passwd = getpass("password: ")
 

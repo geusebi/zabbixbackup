@@ -83,15 +83,20 @@ def _mysql_auth(args):
     args.scope["env"] = deepcopy(environ)
     args.scope["env_extra"] = {}
 
-    # Create temporary extra.cnf file
-    logincnf = Path(f"mylogin.cnf")
-    with logincnf.open("w") as fh:
-        fh.writelines([
-            f"[client]\r\n",
-            f"password={args.passwd}\r\n",
-        ])
-    logincnf.chmod(0o600)
-    atexit.register(lambda: logincnf.unlink())
+    if args.loginfile is not None:
+        pass
+    # Create temporary mylogin.cnf file
+    elif args.passwd is not None:
+        logincnf = Path(f"./mylogin.cnf")
+        with logincnf.open("w") as fh:
+            fh.writelines([
+                f"[client]\r\n",
+                f"password={args.passwd}\r\n",
+            ])
+        logincnf.chmod(0o600)
+        if not args.keeploginfile:
+            atexit.register(lambda: logincnf.unlink())
+        args.loginfile = "./mylogin.cnf"
 
 
 def _mysql_query(args, query, description="query", log_func=logging.debug):
@@ -100,8 +105,8 @@ def _mysql_query(args, query, description="query", log_func=logging.debug):
     if args.read_mysql_config:
         extra += ["--defaults-file", args.mysql_config, ]
 
-    if args.passwd:
-        extra += ["--defaults-extra-file=mylogin.cnf", ]
+    if args.loginfile:
+        extra += [f"--defaults-extra-file={args.loginfile}", ]
 
     if args.sock is None:
         extra += ["--host", args.host]
@@ -128,10 +133,18 @@ def _mysql_query(args, query, description="query", log_func=logging.debug):
 
 
 def _mysql_dump(args, params, description="dump cmd", log_func=logging.debug):
-    host_socket, host_socket_value = "--host", args.host
-    if args.sock is not None:
-        host_socket, host_socket_value = "--socket", args.sock
-    
+    extra = []
+    if args.read_mysql_config:
+        extra += ["--defaults-file", args.mysql_config, ]
+
+    if args.loginfile:
+        extra += [f"--defaults-extra-file={args.loginfile}", ]
+
+    if args.sock is None:
+        extra += ["--host", args.host]
+    else:
+        extra += ["--socket", args.sock]
+
     extra_args = []
     if args.columns:
         extra_args += ["--complete-insert", "--quote-names", ]
@@ -142,8 +155,7 @@ def _mysql_dump(args, params, description="dump cmd", log_func=logging.debug):
     cmd = CurryCommand(
         [
             "mysqldump",
-            "--defaults-extra-file=mylogin.cnf",
-            host_socket, host_socket_value,
+        ] + extra + [
             "--user", args.user,
             "--port", args.port,
         ] + extra_args + params,

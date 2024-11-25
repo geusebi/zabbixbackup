@@ -78,13 +78,17 @@ def _psql_auth(args):
     args.scope["env"] = deepcopy(environ)
     args.scope["env_extra"] = {}
 
-    if args.passwd is not None:
+    if args.loginfile is not None:
+        args.scope["env_extra"] = {"PGPASSFILE": str(args.loginfile)}
+    elif args.passwd is not None:
         # Create temporary pgpass file
-        pgpassfile = Path(f".\pgpass")
+        pgpassfile = Path(f"./.pgpass")
         with pgpassfile.open("w") as fh:
+            # TODO: socket?
             fh.write(f"{args.host}:{args.port}:{args.dbname}:{args.user}:{args.passwd}")
         pgpassfile.chmod(0o600)
-        atexit.register(lambda: pgpassfile.unlink())
+        if not args.keeploginfile:
+            atexit.register(lambda: pgpassfile.unlink())
         args.scope["env_extra"] = {"PGPASSFILE": str(pgpassfile)}
 
 
