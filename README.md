@@ -36,6 +36,8 @@ DBMS:
 
 ## Options documentation and examples
 
+- [DBMS](#dbms)
+
 **Main**
 - [--read-zabbix-config](#read-zabbix-config)
 - [--zabbix-config ZABBIX_CONFIG](#zabbix-config)
@@ -44,14 +46,14 @@ DBMS:
 - [--dry-run](#dry-run)
 
 **Connection**
-- [--host HOST](#host) (special for Postgres)
+- [--host HOST](#host) (special for Postgre)
 - [--port PORT](#port)
 - [--sock SOCK](#sock) (MySQL specific)
 - [--username USER](#user)
 - [--passwd PASSWD](#passwd)
 - [--database DBNAME](#dbname)
-- [--schema SCHEMA](#schema) (Postgres specific)
-- [--reverse-lookup](#reverse-lookup)
+- [--schema SCHEMA](#schema) (Postgre specific)
+- [--reverse-lookup](#reverse-lookup) (NOT IMPLEMENTED)
 
 **Dump**
 - [--unknown-action UNKNOWN](#unknown-action)
@@ -62,11 +64,25 @@ DBMS:
 - [--save-files](#save-files)
 - [--files FILES](#files)
 
+**Output**
+- [--compression](#compression) (Postgre specific)
+- [--format](#format) (Postgre specific)
+- [--archive](#archive)
+- [--outdir](#outdir)
+- [--rotate](#rotate)
+
+
 **Verbosity**
 - [--quiet](#verbosity)
 - [--verbose](#verbosity)
 - [--very-verbose](#verbosity)
 - [--debug](#verbosity)
+
+<a name="dbms"></a>
+### Database engine
+**```<DBMS>```**
+
+Database engine to use. Either postgresql or mysql (mariasql compatible).
 
 <a name="read-zabbix-config"></a>
 ### Read zabbix configuration
@@ -244,6 +260,24 @@ if `FILES` is `-` then the standard files are selected, i.e:
 /usr/lib/zabbix/
 ```
 
+<a name="compression"></a>
+### Postgre dump compression
+**```--compression COMPRESSION```**
+
+_Default: 'None'_
+
+Passed as-is to pg_dump --compress, might be implied by format.
+
+<a name="format"></a>
+### Postgre dump format
+**```--format FORMAT```**
+
+_Default: 'custom'_
+
+Dump format, will mandate the file output format.
+
+Available formats: plain, custom, directory, or tar (see postgre documentation).
+
 <a name="archive"></a>
 ### Backup archive format
 **```--archive ARCHIVE, -a ARCHIVE```**
@@ -252,7 +286,7 @@ _Default: '-'_
 
 Backup archive format. '-' to leave the backup uncompressed as a folder.
 
-Available formats are `xz`, `gzip` and `bzip2`. Use ':<LEVEL>' to set a compression
+Available formats are `xz`, `gzip` and `bzip2`. Use `:<LEVEL>` to set a compression
 level. I.e. `--archive xz:6`.
 
 <a name="outdir"></a>

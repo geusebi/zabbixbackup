@@ -249,7 +249,7 @@ def build_sub_parser(args):
 
         output.add_argument(
             "-f", "--format",
-            help="custom dump format, will mandate the file output format.",
+            help="dump format, will mandate the file output format.",
             choices={"plain", "custom", "directory", "tar"},
             default=args.format)
 
