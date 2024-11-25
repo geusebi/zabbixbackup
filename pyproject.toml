@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zabbixbackup"
-version = "0.0.1a3"
+version = "0.0.1b2"
 authors = [
   { name="Giampaolo Eusebi", email="giampaolo.eusebi@gmail.com" },
 ]
