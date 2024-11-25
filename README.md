@@ -76,7 +76,7 @@ DBMS:
 - [--username USER](#user)
 - [--passwd PASSWD](#passwd)
 - [--keep-login-file](#keeploginfile)
-- [--loginfile LOGINFILE](#loginfile)
+- [--login-file LOGINFILE](#loginfile)
 
 - [--database DBNAME](#dbname)
 - [--schema SCHEMA](#schema) (Postgres specific)
@@ -387,6 +387,8 @@ connection options:
   -P PORT, --port PORT
   -u USER, --username USER
   -p PASSWD, --passwd PASSWD
+  --keep-login-file
+  --login-file
   -d DBNAME, --database DBNAME
   -s SCHEMA, --schema SCHEMA
   -n, --reverse-lookup
@@ -439,6 +441,8 @@ connection options:
   -S SOCK, --socket SOCK
   -u USER, --username USER
   -p PASSWD, --passwd PASSWD
+  --keep-login-file
+  --login-file
   -d DBNAME, --database DBNAME
   -n, --reverse-lookup
 
