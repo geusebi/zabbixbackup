@@ -7,19 +7,39 @@
 pip install zabbixbackup
 ```
 
-## Usage
+## Examples
 Create a backup connecting as user `postgres` to the db `zabbix` with schema `zabbix`
 
-`zabbixbackup psql --host 127.0.0.1 --user postgres --database zabbix --schema zabbix`
+`python -m zabbixbackup psql --host 127.0.0.1 --user postgres --passwd mypassword --database zabbix --schema zabbix`
 
 Create a tar archive dump and save standard zabbix configuration files along with it.
 
-`zabbixbackup psql --host 127.0.0.1 --format tar --save-files`
+`python -m zabbixbackup psql --host 127.0.0.1 --passwd mypassword --format tar --save-files`
 
 Create a "custom" archive and save it to a backup folder, rotate backups to retain
 only the last four.
 
-`zabbixbackup psql --host 127.0.0.1 --format custom --rotate 4`
+`python -m zabbixbackup psql --host 127.0.0.1 --passwd mypassword --format custom --rotate 4`
+
+Setup an authentication (`.pgpass`) file and use it to login in subsequent call.
+```
+python -m zabbixbackup pgsql --host 127.0.0.1 \
+          --passwd - --keep-login-file --dry-run
+[input password]
+mv .pgpass /root
+
+python -m zabbixbackup pgsql --host 127.0.0.1 --login-file /root/.pgpass
+```
+
+Setup an authentication (`mylogin.cnf`) file and use it to login in subsequent call.
+```
+python -m zabbixbackup mysql --host 127.0.0.1 \
+          --passwd - --keep-login-file --dry-run
+[input password]
+mv mylogin.cnf /root
+
+python -m zabbixbackup mysql --host 127.0.0.1 --login-file /root/mylogin.cnf
+```
 
 ## First level CLI
 ```
@@ -51,6 +71,9 @@ DBMS:
 - [--sock SOCK](#sock) (MySQL specific)
 - [--username USER](#user)
 - [--passwd PASSWD](#passwd)
+- [--keep-login-file](#keeploginfile)
+- [--loginfile LOGINFILE](#loginfile)
+
 - [--database DBNAME](#dbname)
 - [--schema SCHEMA](#schema) (Postgres specific)
 - [--reverse-lookup](#reverse-lookup) (NOT IMPLEMENTED)
@@ -172,11 +195,30 @@ Username to use for the database connection.
 ### Password
 **```--passwd PASSWD, -p PASSWD```**
 
-_default: -_
+_default: None_
 
 Database login password. Specify '-' for an interactive prompt.
 For Postgres, a `.pgpass` will be created to connect to the database and then
 deleted (might be saved with the backup).
+
+<a name="keeploginfile"></a>
+### Keep login file
+**```--keep-login-file```**
+
+_default: False_
+
+Do not delete login file (either .pgpass or mylogin.cnf) on program exit.
+
+Useful to create the login file and avoid clear password or interactive prompt.
+
+<a name="loginfile"></a>
+### Login file
+**```--login-file LOGINFILE```**
+
+_default: None_
+
+Use this file (either .pgpass or mylogin.cnf) for the authentication.
+
 
 <a name="dbname"></a>
 ### Database name
