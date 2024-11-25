@@ -252,7 +252,7 @@ _Default: ignore_
 
 Action for unknown tables.
 
-Choose `dump` do dump the tables fully with definitions. `nodata` will include only
+Choose `dump` to dump the tables fully with definitions. `nodata` will include only
 the definitions. `ignore` will skip the unknown tables. `fail` will abort the
 backup in case of an unknown table.
 
