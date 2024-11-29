@@ -4,9 +4,9 @@
 
 Python script to perform zabbix dumps.
 
-Inspired by the project https://github.com/npotorino/zabbix-backup.
-
 See full project documentation at https://www.zabbixbackup.com.
+
+Inspired by the project https://github.com/npotorino/zabbix-backup.
 
 ## Install
 ```
@@ -379,7 +379,7 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
                          [-N] [--save-files] [--files FILES] [-x COMPRESSION]
-                         [-f {directory,custom,plain,tar}] [-a ARCHIVE]
+                         [-f {custom,tar,directory,plain}] [-a ARCHIVE]
                          [-o OUTDIR] [-r ROTATE] [-q | -v | -V | --debug]
 
 zabbix dump for psql inspired and directly translated from...
@@ -393,7 +393,7 @@ options:
   -Z ZBX_CONFIG, --zabbix-config ZBX_CONFIG
                         Zabbix config file path. Implicit if `--read-zabbix-
                         config` is set. (default:
-                        \etc\zabbix\zabbix_server.conf)
+                        /etc/zabbix/zabbix_server.conf)
   -D, --dry-run         Do not create the actual backup, only show dump
                         commands. Be aware that the database will be queried
                         for tables selection and temporary folders and files
@@ -443,7 +443,7 @@ output options:
   -x COMPRESSION, --compression COMPRESSION
                         passed as-is to pg_dump --compress, might be implied
                         by format. (default: None)
-  -f {directory,custom,plain,tar}, --format {directory,custom,plain,tar}
+  -f {custom,tar,directory,plain}, --format {custom,tar,directory,plain}
                         dump format, will mandate the file output format.
                         (default: custom)
   -a ARCHIVE, --archive ARCHIVE
@@ -488,7 +488,7 @@ options:
   -Z ZBX_CONFIG, --zabbix-config ZBX_CONFIG
                         Zabbix config file path. Implicit if `--read-zabbix-
                         config` is set. (default:
-                        \etc\zabbix\zabbix_server.conf)
+                        /etc/zabbix/zabbix_server.conf)
   -c, --read-mysql-config
                         Read database host and credentials from MySQL config
                         file. Implicit if `--mysql-config` is set. (default:
@@ -558,3 +558,4 @@ verbosity:
   -V, --very-verbose    print even more informations. (default: False)
   --debug               print everything. (default: False)
 ```
+
