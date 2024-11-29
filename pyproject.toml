@@ -10,7 +10,7 @@ authors = [
 ]
 
 description = "Zabbix database backup utility for postgres and mysql"
-readme = {file = "README.md", content-type = "text/markdown"}
+readme = {file = "README_PYPI.md", content-type = "text/markdown"}
 
 classifiers = [
         "Development Status :: 3 - Alpha",
@@ -27,7 +27,7 @@ classifiers = [
         "Programming Language :: Python :: 3 :: Only",
 ]
 
-keywords = ["zabbix", "backup", "configuration", "postgresql", "postgre", "psql", "mysql"]
+keywords = ["zabbix", "backup", "configuration", "postgresql", "postgres", "psql", "mysql"]
 requires-python = ">= 3.7"
 
 [project.urls]
