@@ -63,11 +63,11 @@ DBMS:
 - [DBMS](#dbms)
 
 **Main**
-- [--read-zabbix-config](#read-zabbix-config)
-- [--zabbix-config ZABBIX_CONFIG](#zabbix-config)
-- [--read-mysql-config](#read-mysql-config) (MySQL specific)
-- [--mysql-config MYSQL_CONFIG](#mysql-config) (MySQL specific)
-- [--dry-run](#dry-run)
+- [--read-zabbix-config](#readzabbixconfig)
+- [--zabbix-config ZABBIX_CONFIG](#zabbixconfig)
+- [--read-mysql-config](#readmysqlconfig) (MySQL specific)
+- [--mysql-config MYSQL_CONFIG](#mysqlconfig) (MySQL specific)
+- [--dry-run](#dryrun)
 
 **Connection**
 - [--host HOST](#host) (special for Postgres)
@@ -80,15 +80,15 @@ DBMS:
 
 - [--database DBNAME](#dbname)
 - [--schema SCHEMA](#schema) (Postgres specific)
-- [--reverse-lookup](#reverse-lookup) (NOT IMPLEMENTED)
+- [--reverse-lookup](#reverselookup) (NOT IMPLEMENTED)
 
 **Dump**
-- [--unknown-action UNKNOWN](#unknown-action)
-- [--monitoring-action MONITORING](#monitoring-action)
-- [--add-columns](#add-columns)
+- [--unknown-action UNKNOWN](#unknownaction)
+- [--monitoring-action MONITORING](#monitoringaction)
+- [--add-columns](#addcolumns)
 
 **Configuration files**
-- [--save-files](#save-files)
+- [--save-files](#savefiles)
 - [--files FILES](#files)
 
 **Output**
@@ -98,20 +98,22 @@ DBMS:
 - [--outdir](#outdir)
 - [--rotate](#rotate)
 
-
 **Verbosity**
 - [--quiet](#verbosity)
 - [--verbose](#verbosity)
 - [--very-verbose](#verbosity)
 - [--debug](#verbosity)
 
+
 <a name="dbms"></a>
 ### Database engine
 **```<DBMS>```**
 
+_Default: no default (mandatory)_
+
 Database engine to use. Either postgresql or mysql (mariasql compatible).
 
-<a name="read-zabbix-config"></a>
+<a name="readzabbixconfig"></a>
 ### Read zabbix configuration
 **```--read-zabbix-config, -z```**
 
@@ -123,7 +125,7 @@ Every variable collected will be used if not already provided by user arguments.
 
 Implicit if `--zabbix-config` is set.
 
-<a name="zabbix-config"></a>
+<a name="zabbixconfig"></a>
 ### Zabbix configuration file
 **```--zabbix-config ZBX_CONFIG, -Z ZBX_CONFIG```**
 
@@ -131,7 +133,7 @@ _Default: /etc/zabbix/zabbix_server.conf_
 
 Zabbix configuration file path.
 
-<a name="read-mysql-config"></a>
+<a name="readmysqlconfig"></a>
 ### Read MySQL configuration (MySQL specific)
 **```--read-mysql-config, -c```**
 
@@ -140,7 +142,7 @@ _Default: False_
 Read database host and credentials from MySQL config file.
 Implicit if `--mysql-config` is set.
 
-<a name="mysql-config"></a>
+<a name="mysqlconfig"></a>
 ### MySQL configuration file (MySQL specific)
 **```--mysql-config MYSQL_CONFIG, -C MYSQL_CONFIG```**
 
@@ -149,7 +151,7 @@ _Default: /etc/mysql/my.cnf_
 MySQL configuration file path.
 Implicit if `--read-mysql-config` is set.
 
-<a name="dry-run"></a>
+<a name="dryrun"></a>
 ### Dry run
 **```--dry-run, -D```**
 
@@ -199,7 +201,7 @@ Username to use for the database connection.
 ### Password
 **```--passwd PASSWD, -p PASSWD```**
 
-_default: None_
+_Default: None_
 
 Database login password. Specify '-' for an interactive prompt.
 For Postgres, a `.pgpass` will be created to connect to the database and then
@@ -209,7 +211,7 @@ deleted (might be saved with the backup).
 ### Keep login file
 **```--keep-login-file```**
 
-_default: False_
+_Default: False_
 
 Do not delete login file (either .pgpass or mylogin.cnf) on program exit.
 
@@ -219,7 +221,7 @@ Useful to create the login file and avoid clear password or interactive prompt.
 ### Login file
 **```--login-file LOGINFILE```**
 
-_default: None_
+_Default: None_
 
 Use this file (either .pgpass or mylogin.cnf) for the authentication.
 
@@ -240,7 +242,7 @@ _Default: public_
 
 The name of the schema to use.
 
-<a name="reverse-lookup"></a>
+<a name="reverselookup"></a>
 ### Reverse lookup
 **```--reverse-lookup, -n```**
 
@@ -248,7 +250,7 @@ _Default: True_
 
 (NOT IMPLEMENTED) Perform a reverse lookup of the IP address for the host.
 
-<a name="unknown-action"></a>
+<a name="unknownaction"></a>
 ### Unknown tables action
 **```--unknown-action {dump,nodata,ignore,fail}, -U {dump,nodata,ignore,fail}```**
 
@@ -260,7 +262,7 @@ Choose `dump` to dump the tables fully with definitions. `nodata` will include o
 the definitions. `ignore` will skip the unknown tables. `fail` will abort the
 backup in case of an unknown table.
 
-<a name="monitoring-action"></a>
+<a name="monitoringaction"></a>
 ### Monitoring tables action
 **```--monitoring-action {dump,nodata}, -U {dump,nodata}```**
 
@@ -271,7 +273,7 @@ Action for monitoring table.
 Choose `dump` do dump the tables fully with definitions. `nodata` will include only
 the definitions.
 
-<a name="add-columns"></a>
+<a name="addcolumns"></a>
 ### Add columns
 **```--add-columns, -N```**
 
@@ -279,7 +281,7 @@ _Default: False_
 
 Add column names in INSERT clauses and quote them as needed.
 
-<a name="save-files"></a>
+<a name="savefiles"></a>
 ### Save configuration files
 **```--save-files```**
 
@@ -299,18 +301,14 @@ Non existant will be ignored. Directory structure is replicated (copied via
 
 File format: one line per folder or file.
 
-if `FILES` is `-` then the standard files are selected, i.e:
-
-```
-/etc/zabbix/
-/usr/lib/zabbix/
-```
+If `FILES` is `-` then the standard files are selected, i.e:
+`/etc/zabbix/` and `/usr/lib/zabbix/`.
 
 <a name="compression"></a>
 ### Postgres dump compression
 **```--compression COMPRESSION```**
 
-_Default: 'None'_
+_Default: None_
 
 Passed as-is to pg_dump --compress, might be implied by format.
 
@@ -355,15 +353,20 @@ Rotate backups while keeping up 'R' old backups. Uses filenames to find old back
 <a name="verbosity"></a>
 ### Verbosity
 
-**```--quiet, -q```** don't print anything except unrecoverable errors,
+**```--quiet, -q```**
 
-**```--verbose, -v```** print informations only,
+**```--verbose, -v```** 
 
-**```--very-verbose, -V```** print even more informations,
+**```--very-verbose, -V```** 
 
-**```--debug```** print everything.
+**```--debug```** 
 
 _Default: verbose_
+
+Don't print anything except unrecoverable errors (quiet),
+print informations only (verbose),
+print even more informations (very verbose),
+print everything (debug).
 
 ### Postgres SQL: second level CLI
 
