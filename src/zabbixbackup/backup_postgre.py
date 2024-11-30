@@ -31,9 +31,10 @@ def backup_postgresql(args):
         exit(1)
 
     version, _ = parse_zabbix_version(raw_version)
+    args.scope["version"] = version
     logging.info(f"Zabbix version: {version}")
 
-    name = create_name(args, version)
+    name = create_name(args)
     logging.info(f"Backup base name: {name}")
 
 

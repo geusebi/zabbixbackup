@@ -12,7 +12,8 @@ re_cfg = re.compile(r"""
     (?P<day>[0-9]{2})-                #
     (?P<hour>[0-9]{2})                #
     (?P<minute>[0-9]{2})_             #
-    (?P<version>([0-9][.])+?[0-9]+?)  # zabbix version and eol
+    (?P<second>[0-9]{2})_             #
+    #(?P<version>([0-9][.])+?[0-9]+?)  # zabbix version and eol
     (?P<ext>([.]tar[.](gz|xz|bz2)))?  # extension (empty if plain folder)
 """, re.VERBOSE)
 
@@ -26,7 +27,7 @@ def rotate(args: PSqlArgs|MySqlArgs):
     if n <= 0:
         return
     
-    outdir, host, version = args.outdir, args.host, args.scope["version"]
+    outdir, host = args.outdir, args.host
 
     folders = [
         item
@@ -39,10 +40,10 @@ def rotate(args: PSqlArgs|MySqlArgs):
     for folder in folders:
         if match := re_cfg.fullmatch(folder.name):
             d = match.groupdict()
-            if d["host"] == host and d["version"] == version:
+            if d["host"] == host:
                 int_dt = int(
                     f"{d['year']}{d['month']}{d['day']}"
-                    f"{d['hour']}{d['minute']}"
+                    f"{d['hour']}{d['minute']}{d['second']}"
                 )
                 backups.append((int_dt, folder))
 

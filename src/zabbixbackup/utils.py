@@ -158,7 +158,8 @@ def parse_zabbix_version(query_result):
     return version, (major, minor, revision)
 
 
-def create_name(args, version):
+def create_name(args):
+    version = args.scope["version"]
     dt = datetime.now().strftime("%Y%m%d-%H%M")
     name = f"zabbix_{args.host}_{dt}_{version}"
 
