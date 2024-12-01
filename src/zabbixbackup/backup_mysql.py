@@ -43,8 +43,8 @@ def backup_mysql(args):
     table_list = sorted(table_cmd.exec())
     ignore, nodata, fail = preprocess_tables_lists(args, table_list)
 
-    schema_path = Path(args.scope["tmp_dir"]) / f"schemas.sql"
-    data_path = Path(args.scope["tmp_dir"]) / f"data.sql"
+    schema_path = Path(args.scope["tmp_dir"]) / f"zabbix_dump_schemas.sql"
+    data_path = Path(args.scope["tmp_dir"]) / f"zabbix_dump_data.sql"
 
     dump_schema_args = [
         "--opt", "--single-transaction", "--skip-lock-tables",

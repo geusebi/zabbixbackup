@@ -1,4 +1,6 @@
+from copy import deepcopy
 import logging
+from os import environ
 import subprocess
 from pathlib import Path
 from datetime import datetime
@@ -16,6 +18,86 @@ def quote(s):
         return r
     
     return s
+
+
+class Command(object):
+    def __init__(self, command, env_extra={}) -> None:
+        self.env_extra = env_extra
+        self.env = {**environ, **env_extra}
+        self.command = tuple(map(str, command))
+
+    def reprexec(self):
+        rargs = map(quote, self.command)
+
+        str_env = " ".join((
+            f"{key}={quote(value)}"
+            for key, value
+            in self.env_extra.items()))
+
+        # Good enough
+        output = ""
+        if str_env:
+            output += str_env + " \\\n"
+
+        output += " ".join((
+            f"\\\n    {line}" if line.startswith("-") else line for line in rargs
+        ))
+
+        return output
+
+    __repr__ = reprexec
+
+    def exec(self, **kwargs):
+        """
+        Wrapper for subprocess.run.
+        
+        force 'text' output and returns 'stdout' as a tuple of lines
+        where the last line is omitted if empty (it generally is).
+
+        Return None on error (actual error, not the process retvalue)
+        """
+        if "text" not in kwargs:
+            kwargs["text"] = True
+
+        # allow overloading of stdin and stdout
+        # stderr is used for logging in case of errors
+        stdin  = subprocess.PIPE if "stdin"  not in kwargs else kwargs["stdin"]
+        stdout = subprocess.PIPE if "stdout" not in kwargs else kwargs["stdout"]
+        stderr = subprocess.PIPE
+        try:
+            logger = logging.getLogger()
+            if logger.isEnabledFor(logging.DEBUG):
+                stderr = None
+        except Exception:
+            pass
+
+        try:
+            result = subprocess.run(
+                self.command, **kwargs,
+                env=self.env,
+                stdin=stdin,
+                stdout=stdout,
+                stderr=stderr,
+                check=True,
+            )
+            out = result.stdout
+
+        except subprocess.CalledProcessError as e:
+            #logging.debug(e.stderr.rstrip())
+            logging.debug(f"return code {e.returncode}")
+            return None
+        except FileNotFoundError:
+            logging.critical(f"Command not found \"{self.command[0]}\"")
+            return None
+
+        if stdout == subprocess.PIPE:
+            lines = tuple(map(str.strip, out.split("\n")))
+            if lines:
+                if lines[-1] == "":
+                    return lines[:-1]
+            return result.returncode, lines
+
+        return result.returncode, []
 
 
 class CurryCommand(object):
@@ -159,11 +241,8 @@ def parse_zabbix_version(query_result):
 
 
 def create_name(args):
-    version = args.scope["version"]
-    dt = datetime.now().strftime("%Y%m%d-%H%M")
-    name = f"zabbix_{args.host}_{dt}_{version}"
-
-    return name
+    dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+    return f"zabbix_{args.host}_{dt}"
 
 
 def preprocess_tables_lists(args, table_list):

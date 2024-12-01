@@ -28,8 +28,8 @@ class PSqlArgs(object):
     unknown: str             = "ignore"
     monitoring: str          = "nodata"
     columns: bool            = False
-    compression: str         = None
-    format: str              = "custom"
+    pgformat: str            = "custom"
+    pgcompression: str       = None
     outdir: str|Path         = Path(".")
     rotate: int              = 0
 
@@ -78,6 +78,7 @@ class MySqlArgs(object):
     unknown: str             = "ignore"
     monitoring: str          = "nodata"
     columns: bool            = False
+    mysqlcompression: str    = "gz:6"
     outdir: str|Path         = Path(".")
     rotate: int              = 0
 

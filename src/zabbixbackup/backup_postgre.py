@@ -1,11 +1,12 @@
 import logging
+import subprocess
 from sys import exit
 from os import environ
 import atexit
 from copy import deepcopy
 from pathlib import Path
 from .utils import (
-    CurryCommand, parse_zabbix_version, create_name,
+    Command, CurryCommand, parse_zabbix_version, create_name,
     preprocess_tables_lists, try_find_sockets,
 )
 
@@ -15,6 +16,7 @@ def backup_postgresql(args):
 
     # Phase 0: setup authentication
     _psql_auth(args)
+    env_extra = args.scope["env_extra"]
 
     # Informational data about an eventual connection via socket
     if args.host == "" or args.host == "localhost" or args.host.startswith("/"):
@@ -25,7 +27,7 @@ def backup_postgresql(args):
 
     # Phase 1: Fetch database version and assign a name
     select_db_version = "SELECT optional FROM dbversion;"
-    raw_version = _psql_query(args, select_db_version, "zabbix version query").exec()
+    raw_version = _psql_query(args, select_db_version, env_extra, "zabbix version query").exec()
     if raw_version is None:
         logging.fatal("Could not retrieve db version (see logs using --debug)")
         exit(1)
@@ -39,7 +41,7 @@ def backup_postgresql(args):
 
 
     # Phase 2: Perform the actual backup
-    dump_args = []
+    dump_params = []
     
     # select and filter tables: done here and passed to _pg_dump for simplicity
     table_list_query = (
@@ -48,7 +50,7 @@ def backup_postgresql(args):
         f"table_catalog='{args.dbname}' AND "
         f"table_type='BASE TABLE';")
 
-    table_cmd = _psql_query(args, table_list_query, "zabbix tables list query")
+    table_cmd = _psql_query(args, table_list_query, env_extra, "zabbix tables list query")
     table_list = sorted(table_cmd.exec())
     ignore, nodata, fail = preprocess_tables_lists(args, table_list)
 
@@ -59,15 +61,15 @@ def backup_postgresql(args):
     if nodata:
         for i in range(0, len(nodata), 4):
             nodata_pattern = f"({'|'.join(nodata[i:i+4])})"
-            dump_args += ["--exclude-table-data", nodata_pattern]
+            dump_params += ["--exclude-table-data", nodata_pattern]
 
     if ignore:
         for i in range(0, len(ignore), 4):
             ignore_pattern = f"({'|'.join(ignore)})"
-            dump_args += ["--exclude-table", ignore_pattern]
+            dump_params += ["--exclude-table", ignore_pattern]
 
     # all other flags and arguments are set up by _pg_dump
-    dump = _pg_dump(args, dump_args, "pgdump command", logging.info)
+    dump = _pg_dump(args, dump_params, env_extra, "pgdump command", logging.info)
 
     if not args.dry_run:
         dump.exec()
@@ -93,59 +95,80 @@ def _psql_auth(args):
         args.scope["env_extra"] = {"PGPASSFILE": str(pgpassfile)}
 
 
-def _psql_query(args, query, description="query", log_func=logging.debug):
+def _psql_query(args, query, env_extra={}, description="query", log_func=logging.debug):
     # psql command will be used to inspect the database
-    query = CurryCommand(
-        [
-            "psql",
-            "--host", args.host,
-            "--username", args.user,
-            "--port", args.port,
-            "--dbname", args.dbname,
-            "--no-password", "--no-align", "--tuples-only", "--no-psqlrc",
-            "--command",
-        ] + [query]
-        , args.scope["env"], args.scope["env_extra"]
-    )
+    cmd = [
+        "psql",
+        "--host", args.host,
+        "--username", args.user,
+        "--port", args.port,
+        "--dbname", args.dbname,
+        "--no-password",
+        "--no-align",
+        "--tuples-only",
+        "--no-psqlrc",
+        "--command",
+        query,
+    ]
 
-    log_func(f"{description}: \n{query.reprexec()}")
+    exec_query = Command(cmd, env_extra=env_extra)
 
-    return query
+    log_func(f"{description}: \n{exec_query.reprexec()}")
+
+    return exec_query
 
 
-def _pg_dump(args, params, description="dump cmd", log_func=logging.debug):
-    extra_args = []
+def _pg_dump(args, params, env_extra={}, description="dump cmd", log_func=logging.debug):
+    cmd = [
+        "pg_dump",
+        "--host", args.host,
+        "--username", args.user,
+        "--port", args.port,
+        "--dbname", args.dbname,
+        "--schema", args.schema,
+        "--no-password",
+    ]
+
     if args.columns:
-        # Todo: figure out if --inserts is redundant
-        extra_args += ["--inserts", "--column-inserts", "--quote-all-identifiers", ]
-    
-    if args.verbosity in ("very", "debug"):
-        extra_args += ["--verbose"]
+        # TODO: figure out if --inserts is redundant
+        cmd += ["--inserts", "--column-inserts", "--quote-all-identifiers", ]
 
-    if args.compression is not None:
-        extra_args += ["--compress", args.compression]
+    cmd += ["--format", args.pgformat]
+
+    if args.pgcompression is not None:
+        cmd += ["--compress", args.pgcompression]
 
     # choose the extension depending on output format
     # TODO: move out of pg_dump for simmetry
     extensions = {"plain": ".sql", "custom": ".pgdump", "directory": "", "tar": ".tar"}
-    sqlpath = Path(args.scope["tmp_dir"]) / f"zabbix_cfg{extensions[args.format]}"
+    ext = extensions[args.pgformat]
 
-    extra_args += ["--file", str(sqlpath)]
-    extra_args += ["--format", args.format]
+    # try to guess the correct extension in case of dump compression,
+    # good enough, might fail in some edge cases
+    compr_ext = ""
+    if args.pgcompression is not None and args.pgformat == "plain":
+        algo, _, detail = args.pgcompression.partition(":")
 
-    cmd = CurryCommand(
-        [
-            "pg_dump",
-            "--host", args.host,
-            "--username", args.user,
-            "--port", args.port,
-            "--dbname", args.dbname,
-            "--schema", args.schema,
-            "--no-password",
-        ] + extra_args + params,
-        args.scope["env"], args.scope["env_extra"]
-    )
+        if algo == "0" or detail == "0":
+            pass
+        elif algo == "gzip" or algo.isdigit():
+            compr_ext = ".gz"
+        elif algo == "lz4":
+            compr_ext = ".lz"
+        elif algo == "zstd":
+            compr_ext = ".zst"
 
-    log_func(f"{description}: \n{cmd.reprexec()}")
+    dump_path = Path(args.scope["tmp_dir"]) / f"zabbix_dump{ext}{compr_ext}"
 
-    return cmd
+    cmd += ["--file", str(dump_path)]
+
+    if args.verbosity in ("very", "debug"):
+        cmd += ["--verbose"]
+
+    cmd += params
+
+    dump = Command(cmd, env_extra=env_extra)
+
+    log_func(f"{description}: \n{dump.reprexec()}")
+
+    return dump

@@ -215,7 +215,7 @@ def build_sub_parser(args):
         dest="rlookup")
 
 
-    dump = parser.add_argument_group("dump options")
+    dump = parser.add_argument_group("dump action options")
 
     dump.add_argument(
         "-U", "--unknown-action",
@@ -238,6 +238,27 @@ def build_sub_parser(args):
         action="store_true",
         dest="columns")
 
+    compression = parser.add_argument_group("dump level compression options")
+
+    if dbms == "psql":
+        compression.add_argument(
+            "-x", "--pgcompression",
+            help="passed as-is to pg_dump --compress, might be implied by format.",
+            default=args.pgcompression)
+
+        compression.add_argument(
+            "-f", "--pgformat",
+            help="dump format, will mandate the file output format.",
+            choices={"plain", "custom", "directory", "tar"},
+            default=args.pgformat)
+
+    if dbms == "mysql":
+        compression.add_argument(
+            "--mysqlcompression",
+            help="dump level compression. "
+                "Available formats are xz, gzip and bzip2. Use ':<LEVEL>' to set a compression "
+                "level. I.e. --archive xz:6. See documentation for the details.",
+            default=args.mysqlcompression)
 
     files = parser.add_argument_group("configuration files")
 
@@ -251,27 +272,14 @@ def build_sub_parser(args):
         "--files",
         help="save folders and other files as listed in this file. "
             "One line per folder or file, non existant will be ignored. "
-            "Directory structure is replicated (copied via 'cp'). ",
+            "Directory structure is replicated (copied via 'cp').",
         default=args.files)
 
-
     output = parser.add_argument_group("output options")
-
-    if dbms == "psql":
-        output.add_argument(
-            "-x", "--compression",
-            help="passed as-is to pg_dump --compress, might be implied by format.",
-            default=args.compression)
-
-        output.add_argument(
-            "-f", "--format",
-            help="dump format, will mandate the file output format.",
-            choices={"plain", "custom", "directory", "tar"},
-            default=args.format)
-
+    
     output.add_argument(
         "-a", "--archive",
-        help="archive whole backup. '-' to leave the backup uncompressed as a folder. "
+        help="archive level compression. '-' to leave the backup uncompressed as a folder. "
             "Available formats are xz, gzip and bzip2. Use ':<LEVEL>' to set a compression "
             "level. I.e. --archive xz:6",
         default=args.archive)
