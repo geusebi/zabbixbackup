@@ -1,3 +1,11 @@
+# Local
+doc
+0-push.ps1
+1-build.ps1
+2-upload.ps1
+TODO
+zabbix-dump
+
 # ---> Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
