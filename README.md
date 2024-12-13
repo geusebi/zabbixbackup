@@ -75,7 +75,7 @@ DBMS:
 - [--host HOST](#host) (special for Postgres)
 - [--port PORT](#port)
 - [--sock SOCK](#sock) (MySQL specific)
-- [--username USER](#user)
+- [--username USER](#username)
 - [--passwd PASSWD](#passwd)
 - [--keep-login-file](#keeploginfile)
 - [--login-file LOGINFILE](#loginfile)
@@ -84,28 +84,30 @@ DBMS:
 - [--schema SCHEMA](#schema) (Postgres specific)
 - [--reverse-lookup](#reverselookup) (NOT IMPLEMENTED)
 
-**Dump**
+**Dump action**
 - [--unknown-action UNKNOWN](#unknownaction)
 - [--monitoring-action MONITORING](#monitoringaction)
 - [--add-columns](#addcolumns)
+
+**Dump compression**
+- [--pgformat PGFORMAT](#pgformat) (Postgres specific)
+- [--pgcompression PGCOMPRESSION](#pgcompression) (Postgres specific)
+- [--mysqlcompression MYSQLCOMPRESSION](#mysqlcompression) (MySQL specific)
 
 **Configuration files**
 - [--save-files](#savefiles)
 - [--files FILES](#files)
 
 **Output**
-- [--compression](#compression) (Postgres specific)
-- [--format](#format) (Postgres specific)
-- [--archive](#archive)
-- [--outdir](#outdir)
-- [--rotate](#rotate)
+- [--archive ARCHIVE](#archive)
+- [--outdir OUTDIR](#outdir)
+- [--rotate ROTATE](#rotate)
 
 **Verbosity**
 - [--quiet](#verbosity)
 - [--verbose](#verbosity)
 - [--very-verbose](#verbosity)
 - [--debug](#verbosity)
-
 
 <a name="dbms"></a>
 ### Database engine
@@ -160,8 +162,8 @@ Implicit if `--read-mysql-config` is set.
 _Default: False_
 
 Do not create the actual backup, only show dump commands.
-**Be aware that the database will be queried** for tables selection **and
-temporary folders and files will be created**. This is meant only for inspection
+**Be aware that the database will be queried** for tables selection and
+**folders and files will be created**. This is meant only for setup, inspection
 and debugging.
 
 <a name="host"></a>
@@ -219,6 +221,8 @@ Do not delete login file (either .pgpass or mylogin.cnf) on program exit.
 
 Useful to create the login file and avoid clear password or interactive prompt.
 
+For Postgres, the saved file is not hidden (pgpass).
+
 <a name="loginfile"></a>
 ### Login file
 **```--login-file LOGINFILE```**
@@ -226,7 +230,6 @@ Useful to create the login file and avoid clear password or interactive prompt.
 _Default: None_
 
 Use this file (either .pgpass or mylogin.cnf) for the authentication.
-
 
 <a name="dbname"></a>
 ### Database name
@@ -283,11 +286,49 @@ _Default: False_
 
 Add column names in INSERT clauses and quote them as needed.
 
+<a name="pgformat"></a>
+### Postgres dump format
+**```--pgformat PGFORMAT```**
+
+_Default: 'custom'_
+
+Dump format, will mandate the file output format.
+
+Available formats: plain, custom, directory, or tar (see postgres documentation).
+
+<a name="pgcompression"></a>
+### Postgres dump compression
+**```--pgcompression PGCOMPRESSION```**
+
+_Default: None_
+
+Passed as-is to pg_dump --compress, might be implied by format (see postgres documentation).
+
+Be aware that the postgre 'tar' format won't be compressed. In that case you could use '--archive'.
+
+<a name="mysqlcompression"></a>
+### Dump compression
+**```--mysqlcompression MYSQLCOMPRESSION```**
+
+_Default: '-'_
+
+Mysql dump compression.
+
+'-' to leave the dump uncompressed as is.
+
+Available compression formats are `xz`, `gzip` and `bzip2`.
+Use `:<LEVEL>` to set a compression.
+
+The compression binary must be available in current shell.
+'xz', 'gzip', and 'bzip2' will take precedence and '7z' is used as fallback (might be useful on Windows platforms).
+
+**NOTE: on windows platforms this result is a compressed file with CRLF line termination instead of LF.**
+
 <a name="savefiles"></a>
 ### Save configuration files
 **```--save-files```**
 
-_Default: True_
+_Default: False_
 
 Save folders and other files in the backup (see --files).
 
@@ -306,34 +347,18 @@ File format: one line per folder or file.
 If `FILES` is `-` then the standard files are selected, i.e:
 `/etc/zabbix/` and `/usr/lib/zabbix/`.
 
-<a name="compression"></a>
-### Postgres dump compression
-**```--compression COMPRESSION```**
-
-_Default: None_
-
-Passed as-is to pg_dump --compress, might be implied by format.
-
-<a name="format"></a>
-### Postgres dump format
-**```--format FORMAT```**
-
-_Default: 'custom'_
-
-Dump format, will mandate the file output format.
-
-Available formats: plain, custom, directory, or tar (see postgres documentation).
-
 <a name="archive"></a>
 ### Backup archive format
 **```--archive ARCHIVE, -a ARCHIVE```**
 
 _Default: '-'_
 
-Backup archive format. '-' to leave the backup uncompressed as a folder.
+Use 'tar' to create a tar archive.
 
-Available formats are `xz`, `gzip` and `bzip2`. Use `:<LEVEL>` to set a compression
-level. I.e. `--archive xz:6`.
+'-' to leave the backup uncompressed as a folder.
+
+Available compression formats are `xz`, `gzip` and `bzip2`.
+Use `:<LEVEL>` to set a compression level. I.e. `--archive xz:6`.
 
 <a name="outdir"></a>
 ### Output directory
@@ -378,9 +403,10 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [-u USER] [-p PASSWD] [--keep-login-file]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
-                         [-N] [--save-files] [--files FILES] [-x COMPRESSION]
-                         [-f {custom,tar,directory,plain}] [-a ARCHIVE]
-                         [-o OUTDIR] [-r ROTATE] [-q | -v | -V | --debug]
+                         [-N] [-x PGCOMPRESSION]
+                         [-f {plain,custom,tar,directory}] [--save-files]
+                         [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
+                         [-q | -v | -V | --debug]
 
 zabbix dump for psql inspired and directly translated from...
 
@@ -423,7 +449,7 @@ connection options:
   -n, --reverse-lookup  (NOT IMPLEMENTED) perform a reverse lookup of the IP
                         address for the host. (default: True)
 
-dump options:
+dump action options:
   -U {dump,nodata,ignore,fail}, --unknown-action {dump,nodata,ignore,fail}
                         action for unknown tables. (default: ignore)
   -M {dump,nodata}, --monitoring-action {dump,nodata}
@@ -431,26 +457,29 @@ dump options:
   -N, --add-columns     add column names in INSERT clauses and quote them as
                         needed. (default: False)
 
+dump level compression options:
+  -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
+                        passed as-is to pg_dump --compress, might be implied
+                        by format. (default: None)
+  -f {plain,custom,tar,directory}, --pgformat {plain,custom,tar,directory}
+                        dump format, will mandate the file output format.
+                        (default: custom)
+
 configuration files:
   --save-files          save folders and other files (see --files). (default:
-                        True)
+                        False)
   --files FILES         save folders and other files as listed in this file.
                         One line per folder or file, non existant will be
                         ignored. Directory structure is replicated (copied via
                         'cp'). (default: -)
 
 output options:
-  -x COMPRESSION, --compression COMPRESSION
-                        passed as-is to pg_dump --compress, might be implied
-                        by format. (default: None)
-  -f {custom,tar,directory,plain}, --format {custom,tar,directory,plain}
-                        dump format, will mandate the file output format.
-                        (default: custom)
   -a ARCHIVE, --archive ARCHIVE
-                        archive whole backup. '-' to leave the backup
-                        uncompressed as a folder. Available formats are xz,
-                        gzip and bzip2. Use ':<LEVEL>' to set a compression
-                        level. I.e. --archive xz:6 (default: -)
+                        archive level compression. 'tar' to create a tar
+                        archive, '-' to leave the backup uncompressed as a
+                        folder. Other available formats are xz, gzip and
+                        bzip2. Use ':<LEVEL>' to set a compression level. I.e.
+                        --archive xz:6 (default: -)
   -o OUTDIR, --outdir OUTDIR
                         save database dump to 'outdir'. (default: .)
   -r ROTATE, --rotate ROTATE
@@ -474,7 +503,8 @@ usage: zabbixbackup mysql [-h] [-z] [-Z ZBX_CONFIG] [-c] [-C MYSQL_CONFIG]
                           [-p PASSWD] [--keep-login-file]
                           [--login-file LOGINFILE] [-d DBNAME] [-n]
                           [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
-                          [-N] [--save-files] [--files FILES] [-a ARCHIVE]
+                          [-N] [--mysqlcompression MYSQLCOMPRESSION]
+                          [--save-files] [--files FILES] [-a ARCHIVE]
                           [-o OUTDIR] [-r ROTATE] [-q | -v | -V | --debug]
 
 zabbix dump for mysql inspired and directly translated from...
@@ -523,7 +553,7 @@ connection options:
   -n, --reverse-lookup  (NOT IMPLEMENTED) perform a reverse lookup of the IP
                         address for the host. (default: True)
 
-dump options:
+dump action options:
   -U {dump,nodata,ignore,fail}, --unknown-action {dump,nodata,ignore,fail}
                         action for unknown tables. (default: ignore)
   -M {dump,nodata}, --monitoring-action {dump,nodata}
@@ -531,9 +561,16 @@ dump options:
   -N, --add-columns     add column names in INSERT clauses and quote them as
                         needed. (default: False)
 
+dump level compression options:
+  --mysqlcompression MYSQLCOMPRESSION
+                        dump level compression. Available formats are xz, gzip
+                        and bzip2. Use ':<LEVEL>' to set a compression level.
+                        I.e. --archive xz:6. See documentation for the
+                        details. (default: gzip:6)
+
 configuration files:
   --save-files          save folders and other files (see --files). (default:
-                        True)
+                        False)
   --files FILES         save folders and other files as listed in this file.
                         One line per folder or file, non existant will be
                         ignored. Directory structure is replicated (copied via
@@ -541,10 +578,11 @@ configuration files:
 
 output options:
   -a ARCHIVE, --archive ARCHIVE
-                        archive whole backup. '-' to leave the backup
-                        uncompressed as a folder. Available formats are xz,
-                        gzip and bzip2. Use ':<LEVEL>' to set a compression
-                        level. I.e. --archive xz:6 (default: -)
+                        archive level compression. 'tar' to create a tar
+                        archive, '-' to leave the backup uncompressed as a
+                        folder. Other available formats are xz, gzip and
+                        bzip2. Use ':<LEVEL>' to set a compression level. I.e.
+                        --archive xz:6 (default: -)
   -o OUTDIR, --outdir OUTDIR
                         save database dump to 'outdir'. (default: .)
   -r ROTATE, --rotate ROTATE

@@ -68,9 +68,10 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [-u USER] [-p PASSWD] [--keep-login-file]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
-                         [-N] [--save-files] [--files FILES] [-x COMPRESSION]
-                         [-f {custom,plain,tar,directory}] [-a ARCHIVE]
-                         [-o OUTDIR] [-r ROTATE] [-q | -v | -V | --debug]
+                         [-N] [-x PGCOMPRESSION]
+                         [-f {plain,custom,tar,directory}] [--save-files]
+                         [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
+                         [-q | -v | -V | --debug]
 
 zabbix dump for psql inspired and directly translated from...
 
@@ -113,7 +114,7 @@ connection options:
   -n, --reverse-lookup  (NOT IMPLEMENTED) perform a reverse lookup of the IP
                         address for the host. (default: True)
 
-dump options:
+dump action options:
   -U {dump,nodata,ignore,fail}, --unknown-action {dump,nodata,ignore,fail}
                         action for unknown tables. (default: ignore)
   -M {dump,nodata}, --monitoring-action {dump,nodata}
@@ -121,26 +122,29 @@ dump options:
   -N, --add-columns     add column names in INSERT clauses and quote them as
                         needed. (default: False)
 
+dump level compression options:
+  -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
+                        passed as-is to pg_dump --compress, might be implied
+                        by format. (default: None)
+  -f {plain,custom,tar,directory}, --pgformat {plain,custom,tar,directory}
+                        dump format, will mandate the file output format.
+                        (default: custom)
+
 configuration files:
   --save-files          save folders and other files (see --files). (default:
-                        True)
+                        False)
   --files FILES         save folders and other files as listed in this file.
                         One line per folder or file, non existant will be
                         ignored. Directory structure is replicated (copied via
                         'cp'). (default: -)
 
 output options:
-  -x COMPRESSION, --compression COMPRESSION
-                        passed as-is to pg_dump --compress, might be implied
-                        by format. (default: None)
-  -f {custom,plain,tar,directory}, --format {custom,plain,tar,directory}
-                        dump format, will mandate the file output format.
-                        (default: custom)
   -a ARCHIVE, --archive ARCHIVE
-                        archive whole backup. '-' to leave the backup
-                        uncompressed as a folder. Available formats are xz,
-                        gzip and bzip2. Use ':<LEVEL>' to set a compression
-                        level. I.e. --archive xz:6 (default: -)
+                        archive level compression. 'tar' to create a tar
+                        archive, '-' to leave the backup uncompressed as a
+                        folder. Other available formats are xz, gzip and
+                        bzip2. Use ':<LEVEL>' to set a compression level. I.e.
+                        --archive xz:6 (default: -)
   -o OUTDIR, --outdir OUTDIR
                         save database dump to 'outdir'. (default: .)
   -r ROTATE, --rotate ROTATE
@@ -164,7 +168,8 @@ usage: zabbixbackup mysql [-h] [-z] [-Z ZBX_CONFIG] [-c] [-C MYSQL_CONFIG]
                           [-p PASSWD] [--keep-login-file]
                           [--login-file LOGINFILE] [-d DBNAME] [-n]
                           [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
-                          [-N] [--save-files] [--files FILES] [-a ARCHIVE]
+                          [-N] [--mysqlcompression MYSQLCOMPRESSION]
+                          [--save-files] [--files FILES] [-a ARCHIVE]
                           [-o OUTDIR] [-r ROTATE] [-q | -v | -V | --debug]
 
 zabbix dump for mysql inspired and directly translated from...
@@ -213,7 +218,7 @@ connection options:
   -n, --reverse-lookup  (NOT IMPLEMENTED) perform a reverse lookup of the IP
                         address for the host. (default: True)
 
-dump options:
+dump action options:
   -U {dump,nodata,ignore,fail}, --unknown-action {dump,nodata,ignore,fail}
                         action for unknown tables. (default: ignore)
   -M {dump,nodata}, --monitoring-action {dump,nodata}
@@ -221,9 +226,16 @@ dump options:
   -N, --add-columns     add column names in INSERT clauses and quote them as
                         needed. (default: False)
 
+dump level compression options:
+  --mysqlcompression MYSQLCOMPRESSION
+                        dump level compression. Available formats are xz, gzip
+                        and bzip2. Use ':<LEVEL>' to set a compression level.
+                        I.e. --archive xz:6. See documentation for the
+                        details. (default: gzip:6)
+
 configuration files:
   --save-files          save folders and other files (see --files). (default:
-                        True)
+                        False)
   --files FILES         save folders and other files as listed in this file.
                         One line per folder or file, non existant will be
                         ignored. Directory structure is replicated (copied via
@@ -231,10 +243,11 @@ configuration files:
 
 output options:
   -a ARCHIVE, --archive ARCHIVE
-                        archive whole backup. '-' to leave the backup
-                        uncompressed as a folder. Available formats are xz,
-                        gzip and bzip2. Use ':<LEVEL>' to set a compression
-                        level. I.e. --archive xz:6 (default: -)
+                        archive level compression. 'tar' to create a tar
+                        archive, '-' to leave the backup uncompressed as a
+                        folder. Other available formats are xz, gzip and
+                        bzip2. Use ':<LEVEL>' to set a compression level. I.e.
+                        --archive xz:6 (default: -)
   -o OUTDIR, --outdir OUTDIR
                         save database dump to 'outdir'. (default: .)
   -r ROTATE, --rotate ROTATE
