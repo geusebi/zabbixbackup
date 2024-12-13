@@ -1,6 +1,9 @@
 from copy import deepcopy
 import logging
 from os import environ
+import shlex
+import shutil
+import socket
 import subprocess
 from pathlib import Path
 from datetime import datetime
@@ -9,19 +12,55 @@ from .tables import zabbix
 
 
 def quote(s):
-    # good enough? shlex.quote was adding too many extras
+    # good enough? shlex.quote alone is adding too many extras
+    # must be readable, not immediately reuseable
     r = repr(s)
     if (
         len(r) - 2 != len(s)
         or any(ch in s for ch in " ()|")
     ):
         return r
-    
+
     return s
+
+def DPopen(*args, **kwargs):
+    stderr = kwargs.get("stderr", subprocess.PIPE)
+    try:
+        logger = logging.getLogger()
+        if logger.isEnabledFor(logging.DEBUG):
+            stderr = None
+    except Exception:
+        pass
+
+    kwargs["stderr"] = stderr
+
+    return subprocess.Popen(*args, **kwargs)
+
+def process_repr(cmd=None, env=None):
+    if cmd is None:
+        return "None"
+
+    rargs = map(quote, cmd)
+
+    str_env = " ".join((
+        f"{key}={quote(value)}"
+        for key, value
+        in env.items()))
+
+    # Good enough
+    output = ""
+    if str_env:
+        output += str_env + " \\\n"
+
+    output += " ".join((
+        f"\\\n    {line}" if line.startswith("-") else line for line in rargs
+    ))
+
+    return output
 
 
 class Command(object):
-    def __init__(self, command, env_extra={}) -> None:
+    def __init__(self, command, env_extra={}, **kwargs) -> None:
         self.env_extra = env_extra
         self.env = {**environ, **env_extra}
         self.command = tuple(map(str, command))
@@ -181,12 +220,16 @@ def run(*args, **kwargs):
 
 def check_binary(*names):
     """Checks whether 'names' are all valid commands in the current shell."""
-    out = run(("command", "-v", *names))
 
-    if out is None:
-        return False
+    for name in names:
+        if shutil.which(name) is None:
+            return False
+    return True
 
-    return len(out) == len(names)
+    #out = run(("command", "-v", *names))
+    #if out is None:
+    #    return False
+    #return len(out) == len(names)
 
 
 def try_find_sockets(search, port):
@@ -212,6 +255,7 @@ def try_find_sockets(search, port):
     return tuple(sockets)
 
 
+"""
 def rlookup(ip):
     output = run(["dig", "+noall", "+answer", "-x", ip])
     if not output:
@@ -227,6 +271,60 @@ def rlookup(ip):
         return None
 
     return subdomains[0]
+"""
+
+def rlookup(ipaddr):
+    try:
+        response = socket.gethostbyaddr(ipaddr) # socket.getfqdn?
+        host = repr(response[0])
+        return host
+    except Exception:
+        return False
+
+
+def build_compress_command(profile):
+    algo, level, extra = profile
+
+    extension = {"xz": ".xz", "gzip": ".gz", "bzip2": ".bz2"}
+
+    env = {}
+    ext = extension[algo]
+
+    if check_binary(algo):
+        cmd = (algo, f"-{level}", ) + extra
+        pipe = cmd
+        return env, ext, cmd, pipe
+
+    if check_binary("7z"):
+        cmd = ("7z", "a", f"-t{algo}", )
+        pipe = ("7z", "a", f"-t{algo}", "-si", )
+        return env, cmd, ext, pipe
+
+    raise NotImplemented(f"Compression binary not available '{algo}")
+
+
+def build_tar_command(profile):
+    if not check_binary("tar"):
+        raise NotImplemented("Missing tar command")
+
+    algo, level, extra = profile
+
+    if algo == "tar":
+        return {}, ("tar", "-cf", ), ".tar"
+
+    extension = {"xz": ".tar.xz", "gzip": ".tar.gz", "bzip2": ".tar.bz2"}
+    env_map = {"xz": "XZ_OPT", "gzip": "GZIP", "bzip2": "BZIP2"}
+    tar_map = {"xz": "J", "gzip": "z", "bzip2": "j"}
+
+    compr_env_var = env_map[algo]
+    compr_flags = " ".join((f"-{level}", ) + extra)
+    tar_flag = tar_map[algo]
+
+    env = {compr_env_var: compr_flags}
+    ext = extension[algo]
+    cmd = ("tar", f"-c{tar_flag}f", )
+
+    return env, cmd, ext
 
 
 def parse_zabbix_version(query_result):

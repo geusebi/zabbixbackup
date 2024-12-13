@@ -1,22 +1,26 @@
 import logging
-import subprocess
-from sys import exit
-from os import environ
+from os import fdopen, environ
+import tempfile
+import shutil
 import atexit
-from copy import deepcopy
 from pathlib import Path
+from subprocess import PIPE
+
 from .utils import (
-    Command, CurryCommand, parse_zabbix_version, create_name,
-    preprocess_tables_lists, try_find_sockets,
+    DPopen, check_binary, parse_zabbix_version,
+    preprocess_tables_lists, process_repr, try_find_sockets,
 )
 
 
 def backup_postgresql(args):
     logging.info(f"DBMS: Postgresql")
+    if not check_binary("psql", "pg_dump"):
+        return 1, "Missing binaries: check 'psql' and 'pg_dump' are available and in PATH"
 
+    args.scope["env"] = {}
+    
     # Phase 0: setup authentication
     _psql_auth(args)
-    env_extra = args.scope["env_extra"]
 
     # Informational data about an eventual connection via socket
     if args.host == "" or args.host == "localhost" or args.host.startswith("/"):
@@ -27,21 +31,17 @@ def backup_postgresql(args):
 
     # Phase 1: Fetch database version and assign a name
     select_db_version = "SELECT optional FROM dbversion;"
-    raw_version = _psql_query(args, select_db_version, env_extra, "zabbix version query").exec()
+    raw_version = _psql_query(args, select_db_version, "zabbix version query")
     if raw_version is None:
-        logging.fatal("Could not retrieve db version (see logs using --debug)")
-        exit(1)
+        return 2, "Could not retrieve db version (see logs)"
 
     version, _ = parse_zabbix_version(raw_version)
-    args.scope["version"] = version
+    with open("zabbix_dbversion", "w") as fh:
+        fh.writelines(["postgres", version, ""])
+
     logging.info(f"Zabbix version: {version}")
 
-    name = create_name(args)
-    logging.info(f"Backup base name: {name}")
-
-
     # Phase 2: Perform the actual backup
-    dump_params = []
     
     # select and filter tables: done here and passed to _pg_dump for simplicity
     table_list_query = (
@@ -50,13 +50,17 @@ def backup_postgresql(args):
         f"table_catalog='{args.dbname}' AND "
         f"table_type='BASE TABLE';")
 
-    table_cmd = _psql_query(args, table_list_query, env_extra, "zabbix tables list query")
-    table_list = sorted(table_cmd.exec())
+    table_cmd = _psql_query(args, table_list_query, "zabbix tables list query")
+    if table_cmd is None:
+        return 3, "Could not retrieve table list (see logs)"
+
+    table_list = sorted(table_cmd)
     ignore, nodata, fail = preprocess_tables_lists(args, table_list)
 
+    dump_params = []
+
     if fail:
-        logging.error(f"Unknwon tables: aborting ({fail!r})")
-        exit(1)
+        return 4, f"Unknwon tables: aborting ({fail!r})"
 
     if nodata:
         for i in range(0, len(nodata), 4):
@@ -69,40 +73,55 @@ def backup_postgresql(args):
             dump_params += ["--exclude-table", ignore_pattern]
 
     # all other flags and arguments are set up by _pg_dump
-    dump = _pg_dump(args, dump_params, env_extra, "pgdump command", logging.info)
+    outpath = Path("zabbix_dump")
+    dump_status = _pg_dump(args, dump_params, outpath, "pgdump command", logging.info)
+    if not dump_status:
+        return 5, "Could not execute dump (see logs)"
 
-    if not args.dry_run:
-        dump.exec()
-
-    args.scope["name"], args.scope["version"] = name, version
+    return 0, "+OK"
 
 
 def _psql_auth(args):
-    args.scope["env"] = deepcopy(environ)
-    args.scope["env_extra"] = {}
-
+    # Use provided loginfile and leave it untouched
     if args.loginfile is not None:
-        args.scope["env_extra"] = {"PGPASSFILE": str(args.loginfile)}
+        args.scope["env"] = {"PGPASSFILE": str(args.loginfile)}
+
     elif args.passwd is not None:
         # Create temporary pgpass file
-        pgpassfile = Path(f"./.pgpass")
-        with pgpassfile.open("w") as fh:
-            # TODO: socket?
-            fh.write(f"{args.host}:{args.port}:{args.dbname}:{args.user}:{args.passwd}")
-        pgpassfile.chmod(0o600)
-        if not args.keeploginfile:
-            atexit.register(lambda: pgpassfile.unlink())
-        args.scope["env_extra"] = {"PGPASSFILE": str(pgpassfile)}
+        pgpass_fd, pgpass_path = tempfile.mkstemp(prefix="pgpass_", text=True)
+        pgpass_path = Path(pgpass_path)
+        fh = fdopen(pgpass_fd, "w")
+
+        pgpass_path.chmod(0o600)
+        fh.writelines([
+                # TODO: socket?
+                f"{args.host}:{args.port}:{args.dbname}:{args.user}:{args.passwd}",
+                "",
+            ])
+        fh.close()
+        
+        abs_pgpass = pgpass_path.absolute()
+        atexit.register(lambda: abs_pgpass.unlink())
+
+        args.loginfile = pgpass_path
+        args.scope["env"] = {"PGPASSFILE": str(pgpass_path)}
+
+    if args.keeploginfile:
+        shutil.copy(args.loginfile, "./pgpass")
+        Path("./pgpass")
 
 
-def _psql_query(args, query, env_extra={}, description="query", log_func=logging.debug):
+def _psql_query(args, query, description="query", log_func=logging.debug):
+    dbname = args.dbname
+    env_extra = args.scope["env"]
+
     # psql command will be used to inspect the database
-    cmd = [
+    query_cmd = [
         "psql",
         "--host", args.host,
         "--username", args.user,
         "--port", args.port,
-        "--dbname", args.dbname,
+        "--dbname", dbname,
         "--no-password",
         "--no-align",
         "--tuples-only",
@@ -111,35 +130,48 @@ def _psql_query(args, query, env_extra={}, description="query", log_func=logging
         query,
     ]
 
-    exec_query = Command(cmd, env_extra=env_extra)
+    query_cmd = tuple(map(str, query_cmd))
+    query_env = {**environ, **env_extra}
 
-    log_func(f"{description}: \n{exec_query.reprexec()}")
+    log_func(f"{description}: \n{process_repr(query_cmd, env_extra)}")
 
-    return exec_query
+    exec_query = DPopen(query_cmd, env=query_env, stdout=PIPE, text=True)
+    stdout, stderr = exec_query.communicate()
+
+    if exec_query.returncode != 0:
+        if stderr is not None:
+            logging.fatal(stderr)
+        return None
+
+    return stdout.splitlines()
 
 
-def _pg_dump(args, params, env_extra={}, description="dump cmd", log_func=logging.debug):
-    cmd = [
+def _pg_dump(
+    args, params, outpath, description="dump cmd", log_func=logging.debug
+):
+    dbname = args.dbname
+    env_extra = args.scope["env"]
+
+    dump_cmd = [
         "pg_dump",
         "--host", args.host,
         "--username", args.user,
         "--port", args.port,
-        "--dbname", args.dbname,
+        "--dbname", dbname,
         "--schema", args.schema,
         "--no-password",
     ]
 
     if args.columns:
         # TODO: figure out if --inserts is redundant
-        cmd += ["--inserts", "--column-inserts", "--quote-all-identifiers", ]
+        dump_cmd += ["--inserts", "--column-inserts", "--quote-all-identifiers", ]
 
-    cmd += ["--format", args.pgformat]
+    dump_cmd += ["--format", args.pgformat]
 
     if args.pgcompression is not None:
-        cmd += ["--compress", args.pgcompression]
+        dump_cmd += ["--compress", args.pgcompression]
 
     # choose the extension depending on output format
-    # TODO: move out of pg_dump for simmetry
     extensions = {"plain": ".sql", "custom": ".pgdump", "directory": "", "tar": ".tar"}
     ext = extensions[args.pgformat]
 
@@ -158,17 +190,25 @@ def _pg_dump(args, params, env_extra={}, description="dump cmd", log_func=loggin
         elif algo == "zstd":
             compr_ext = ".zst"
 
-    dump_path = Path(args.scope["tmp_dir"]) / f"zabbix_dump{ext}{compr_ext}"
+    dump_path = f"{outpath}{ext}{compr_ext}"
 
-    cmd += ["--file", str(dump_path)]
+    dump_cmd += ["--file", str(dump_path)]
 
     if args.verbosity in ("very", "debug"):
-        cmd += ["--verbose"]
+        dump_cmd += ["--verbose"]
 
-    cmd += params
+    dump_cmd += params
 
-    dump = Command(cmd, env_extra=env_extra)
+    dump_env = {**environ, **env_extra}
+    dump_cmd = tuple(map(str, dump_cmd))
 
-    log_func(f"{description}: \n{dump.reprexec()}")
+    log_func(f"{description}: \n{process_repr(dump_cmd, env_extra)}")
 
-    return dump
+    # don't execute if dry run is enabled
+    if args.dry_run:
+        return True
+
+    dump = DPopen(dump_cmd, env=dump_env)
+    dump.communicate()
+
+    return dump.returncode == 0 

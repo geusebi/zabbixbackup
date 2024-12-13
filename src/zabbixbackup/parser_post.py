@@ -69,8 +69,11 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
 
     # Collapse verbosity to a single variable ('verbosity')
     _handle_verbosity(args)
-    
-    # Handle archiving, set archive type and compression level
+
+    if dbms == "mysql":
+        _handle_mysqlcompression(args)
+
+    # Handle archiving and compression, set archive type and compression level
     _handle_archiving(args)
 
     # Checks whether the output directory is a directory or 
@@ -85,51 +88,64 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
     return args
 
 
-def _handle_archiving(args):
+def _parse_compression(parser, compr):
+    # either a number (level), an algo (with default level 6)
+    # or a combination of algo and number
+
+    if compr in ("xz", "gzip", "bzip2"):
+        algo = compr
+        level = "6"
+    elif ":" in compr:
+        algo, level = compr.split(":")    
+    else: # assume level format (checked below)
+        algo = "gzip"
+        level = compr
+
+    extra = tuple()
+
+    # extreme compression for xz
+    if algo == "xz" and level.endswith("e"):
+        level = level[:-1]
+        extra += ("--extreme", )
+
+    # check algorithm and level
+    if algo not in ("xz", "gzip", "bzip2"):
+        raise parser.error(f"Invalid compression algorithm: {compr!r}")
+
+    if (not level.isdecimal() or
+        len(level) != 1 or          # level is not a single decimal
+        level == "0"                # 0 not allowed (only supported by xz)
+    ):
+        raise parser.error(f"Invalid/unsupported compression level: {compr!r}")
+
+    return algo, level, extra
+
+
+def _handle_mysqlcompression(args):
     parser = args.scope["parser"]
     
-    # Handle archiving
-    if args.archive == "-":
-        args.scope["archive_env"] = None
-        args.scope["archive_command"] = None
-        args.scope["archive_extension"] = None
+    if args.mysqlcompression == "-":
+        args.scope["mysqlcompression"] = None
         return
-    
-    valid = True
-    opts = []
 
-    if ":" not in args.archive:
-        archiver = args.archive
-        level = "9"
-    elif ":" in args.archive:
-        archiver, level = args.archive.split(":")
+    profile = _parse_compression(parser, args.mysqlcompression)
+    args.scope["mysqlcompression"] = profile
 
-    if archiver == "xz" and level.endswith("e"):
-        level = level[:-1]
-        opts.append("-e")
 
-    if not level.isdecimal() or len(level) != 1:
-        valid = False
-    else:
-        opts.append(f"-{level}")
+def _handle_archiving(args):
+    parser = args.scope["parser"]
 
-    if archiver not in ("xz", "gzip", "bzip2"):
-        valid = False
+    # Uncompressed folder 
+    if args.archive == "-":
+        args.scope["archive"] = None
+        return
 
-    if not valid:
-        raise parser.error(f"Invalid archive format: {args.archive!r}")
+    if args.archive == "tar":
+        args.scope["archive"] = ("tar", None, None, )
+        return
 
-    extensions = {"xz": ".tar.xz", "gzip": ".tar.gz", "bzip2": ".tar.bz2"}
-    env_map = {"xz": "XZ_OPT", "gzip": "GZIP", "bzip2": "BZIP2"}
-    tar_map = {"xz": "J", "gzip": "z", "bzip2": "j"}
-    
-    env_name = env_map[archiver]
-    tar_compr_opts = tar_map[archiver]
-    string_opts = " ".join(opts)
-
-    args.scope["archive_env"] = {env_name: string_opts}
-    args.scope["archive_command"] = ["tar", f"-c{tar_compr_opts}f"]
-    args.scope["archive_extension"] = extensions[archiver]
+    profile = _parse_compression(parser, args.archive)
+    args.scope["archive"] = profile
 
 
 def _handle_verbosity(args):

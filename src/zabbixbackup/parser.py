@@ -279,9 +279,10 @@ def build_sub_parser(args):
     
     output.add_argument(
         "-a", "--archive",
-        help="archive level compression. '-' to leave the backup uncompressed as a folder. "
-            "Available formats are xz, gzip and bzip2. Use ':<LEVEL>' to set a compression "
-            "level. I.e. --archive xz:6",
+        help="archive level compression. 'tar' to create a tar archive, "
+            "'-' to leave the backup uncompressed as a folder. "
+            "Other available formats are xz, gzip and bzip2. "
+            "Use ':<LEVEL>' to set a compression level. I.e. --archive xz:6",
         default=args.archive)
 
     output.add_argument(

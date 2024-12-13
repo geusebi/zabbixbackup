@@ -3,52 +3,73 @@ if __name__ == "__main__":
     import os
     from sys import argv
     import logging
-    import tempfile
     from pathlib import Path
-    
     from .parser import parse
-    from .utils import pretty_log_args
+    from .utils import create_name, pretty_log_args
     from .backup_postgre import backup_postgresql
     from .backup_mysql import backup_mysql
     from .archiver import save_files, archive
     from .rotation import rotate
+    import atexit
 
     # Parse and preprocess cli arguments
     args = parse(argv[1:])
     scope = args.scope
 
-    # Create temporary file for the log in the current directory
-    raw_fh, tmp_log = tempfile.mkstemp(prefix="zabbixbackup_", suffix=".log", text=True, dir=".")
-    tmp_log = Path(tmp_log)
-    log_fh = os.fdopen(raw_fh, "w")
+    # TODO: rlookup here
+    outdir = args.outdir
+    abs_outdir = outdir.absolute()
+
+    name = create_name(args)
+    archive_dir = outdir / name
+    abs_archive_dir = archive_dir.absolute()
+
+    # Chdir into this backup directory 
+    logging.debug(f"Create archive diretory and chdir to it: {archive_dir}")
+    prev_cwd = Path(os.getcwd()).absolute()
+    atexit.register(lambda: os.chdir(prev_cwd))
+    archive_dir.mkdir()
+    os.chdir(archive_dir)
+
+    log_path = Path("dump.log")
+
+    # Create log in the destination directory
+    logging.debug(f"Log file: {log_path}")
+    log_fh = log_path.open("w")
     logger = logging.getLogger()
     logger_handler = logging.StreamHandler(log_fh)
     logger.addHandler(logger_handler)
 
-    # Create temporary output directory for the backup
-    tmp_dir = tempfile.mkdtemp(prefix="zabbix_", dir=".")
-    tmp_dir = Path(tmp_dir)
-    scope["tmp_dir"] = tmp_dir
-
-    logging.debug(f"Temporary log file: {tmp_log}")
+    logging.debug(f"Log file: {log_path}")
 
     # Pretty print arguments as being parsed and processed
     pretty_log_args(args)
 
     if scope["dbms"] == "psql":
-        backup_postgresql(args)
+        status, message = backup_postgresql(args)
     elif scope["dbms"] == "mysql":
-        backup_mysql(args)
+        status, message = backup_mysql(args)
+
+    # exit immediately if something went wrong
+    if status != 0:
+        logging.fatal(message)
+        exit(status)
 
     save_files(args)
 
-    # Detach  file logger and save log into place 
+    # Detach file logger 
     logger.removeHandler(logger_handler)
     log_fh.close()
-    tmp_log.rename(tmp_dir / "dump.log")
 
+    # No file logging from here
+
+    # From now on operate from backups diretory
+    os.chdir(abs_outdir)
     # Archive, compress and move the backup to the final destination
-    archive(args)
+    archive_path = archive(abs_archive_dir, args)
 
     # Rotate backups
+    os.chdir(abs_outdir)
     rotate(args)
+
+    print(archive_path)

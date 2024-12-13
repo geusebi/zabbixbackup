@@ -1,4 +1,3 @@
-from types import SimpleNamespace as NS
 from pathlib import Path
 from dataclasses import dataclass, field
 
@@ -22,7 +21,7 @@ class PSqlArgs(object):
     schema: str              = "public"
     rlookup: bool            = True
 
-    save_files: bool         = True
+    save_files: bool         = False
     files: str|Path          = "-"
 
     unknown: str             = "ignore"
@@ -44,11 +43,11 @@ class PSqlArgs(object):
 
 PSqlArgs._keys = [
     "read_zabbix_config", "zabbix_config",
-    "host", "port", "user", "passwd", "keeplogin", "loginfile",
+    "host", "port", "user", "passwd", "keeploginfile", "loginfile",
     "dbname", "schema", "rlookup",
     "save_files", "files",
     "unknown", "monitoring",
-    "columns", "compression", "format",
+    "columns", "pgformat", "pgcompression",
     "rotate", "outdir", "archive",
     "dry_run", "verbosity",
 ]
@@ -72,13 +71,13 @@ class MySqlArgs(object):
     dbname: str              = "zabbix"
     rlookup: bool            = True
 
-    save_files: bool         = True
+    save_files: bool         = False
     files: str|Path          = "-"
 
     unknown: str             = "ignore"
     monitoring: str          = "nodata"
     columns: bool            = False
-    mysqlcompression: str    = "gz:6"
+    mysqlcompression: str    = "gzip:6"
     outdir: str|Path         = Path(".")
     rotate: int              = 0
 
@@ -97,6 +96,7 @@ MySqlArgs._keys = [
     "dbname", "rlookup",
     "save_files", "files",
     "unknown", "monitoring",
-    "columns", "rotate", "outdir", "archive",
+    "columns", "mysqlcompression",
+    "rotate", "outdir", "archive",
     "dry_run", "verbosity",
 ]

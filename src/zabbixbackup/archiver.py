@@ -1,8 +1,7 @@
-from pathlib import Path
-from .utils import run
-from .utils import CurryCommand
 from os import environ
-from copy import deepcopy
+from pathlib import Path
+from .utils import DPopen, run
+from .utils import build_tar_command, process_repr
 from shutil import rmtree
 import logging
 
@@ -33,7 +32,7 @@ def save_files(args):
         if files == "-":
             files = Path(__file__).parent / "assets" / "files"
 
-        copy_files(files, args.scope["tmp_dir"] / "root")
+        copy_files(files, Path("host_root"))
 
 
 def copy_files(save_files, base_dir):
@@ -55,41 +54,39 @@ def copy_files(save_files, base_dir):
             dest.parent.mkdir(parents=True)
             # TODO: copy permission on entire directory tree?
 
+        # TODO: remove dependency on cp?
         if run(["cp", "-a", str(item), str(dest)]) is None:
             logging.warning(f"Cannot copy {item}, ignoring...")
         else:
             logging.info(f"Copying {item}")
 
 
-def archive(args):
+def archive(archive_dir, args):
     """
     Create the actual archive file.
 
     Based on user arguments it will be compressed accordingly.
     """
     scope = args.scope
-    tmp_dir: Path = args.scope["tmp_dir"]
-    
+    profile = scope["archive"]
 
-    archive_dir = args.outdir / args.scope["name"]
-    tmp_dir.rename(archive_dir)
+    if profile is not None:
+        env, cmd, ext = build_tar_command(profile)
+        name = archive_dir.name
+        name_ext = name + ext
+        tar_cmd = cmd + (name_ext, name, )
+        tar_env = {**environ, **env}
 
-    if scope["archive_command"] != None:
-        archive_name = (
-            archive_dir.parent /
-            (archive_dir.name + scope["archive_extension"])
-        )
+        logging.debug(f"Archive command: \n{process_repr(tar_cmd, env)}\n")
 
-        env = deepcopy(environ)
-        compress = CurryCommand(
-            scope["archive_command"] + [archive_name, archive_dir],
-            env, scope["archive_env"]
-            )
-        logging.debug(f"Compress command: \n{compress.reprexec()}")
+        archive_exec = DPopen(tar_cmd, env=tar_env)
+        archive_exec.communicate()
 
-        result = compress.exec()
-        if result is not None:
+        if archive_exec.returncode == 0:
+            logging.debug(f"Delete plain folder archive: {archive_dir}\n")
             rmtree(archive_dir)
-    else:
-        # Leave as plain directory
-        pass
+        
+        return Path(name_ext).absolute()
+
+    # Leave as plain directory
+    return Path(archive_dir).absolute()
