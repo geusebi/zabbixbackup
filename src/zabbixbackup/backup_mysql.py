@@ -30,7 +30,7 @@ def backup_mysql(args):
 
     version, _ = parse_zabbix_version(raw_version)
     with open("zabbix_dbversion", "w") as fh:
-        fh.writelines([version])
+        fh.writelines(["mysql\n", "{version}\n"])
 
     logging.info(f"Zabbix version: {version}")
 
@@ -106,8 +106,8 @@ def _mysql_auth(args):
 
         logincnf_path.chmod(0o600)
         fh.writelines([
-                f"[client]\r\n",
-                f"password={args.passwd}\r\n",
+                f"[client]\n",
+                f"password={args.passwd}\n",
             ])
         fh.close()
 

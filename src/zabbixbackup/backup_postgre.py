@@ -37,7 +37,7 @@ def backup_postgresql(args):
 
     version, _ = parse_zabbix_version(raw_version)
     with open("zabbix_dbversion", "w") as fh:
-        fh.writelines(["postgres", version, ""])
+        fh.writelines(["postgres\n", "{version}\n"])
 
     logging.info(f"Zabbix version: {version}")
 
@@ -95,7 +95,7 @@ def _psql_auth(args):
         pgpass_path.chmod(0o600)
         fh.writelines([
                 # TODO: socket?
-                f"{args.host}:{args.port}:{args.dbname}:{args.user}:{args.passwd}",
+                f"{args.host}:{args.port}:{args.dbname}:{args.user}:{args.passwd}\n",
                 "",
             ])
         fh.close()
