@@ -1,3 +1,7 @@
+"""
+Helper functions for saving configuration files
+and to create a compressed tar archive.
+"""
 from os import environ
 from pathlib import Path
 from shutil import rmtree

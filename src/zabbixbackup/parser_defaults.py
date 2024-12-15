@@ -1,3 +1,6 @@
+"""
+Zabbixbackup defaults configuration.
+"""
 from pathlib import Path
 from dataclasses import dataclass, field
 
@@ -8,7 +11,8 @@ from dataclasses import dataclass, field
 # pylint: disable=W0212:protected-access
 
 @dataclass
-class PSqlArgs(object):
+class PSqlArgs:
+    """Zabbixbackup defaults configuration for PostgreSQL."""
     read_zabbix_config: bool = False
     zabbix_config: Path      = Path("/etc/zabbix/zabbix_server.conf")
 
@@ -56,7 +60,8 @@ PSqlArgs._keys = [
 
 
 @dataclass
-class MySqlArgs(object):
+class MySqlArgs:
+    """Zabbixbackup defaults configuration for MySQL or MariaSQL"""
     read_zabbix_config: bool = False
     zabbix_config: Path      = Path("/etc/zabbix/zabbix_server.conf")
     read_mysql_config: bool  = False

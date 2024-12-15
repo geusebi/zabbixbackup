@@ -1,3 +1,7 @@
+"""
+Create a parser for zabbixbackup first level CLI
+and for the subparsers (PostgreSQL and MySQL).
+"""
 import argparse
 from pathlib import Path
 

@@ -1,3 +1,6 @@
+"""
+Helper functions for zabbixbackup.
+"""
 import logging
 from os import environ
 import shutil
@@ -11,6 +14,7 @@ logger = logging.getLogger()
 
 
 def quote(s):
+    """Loosely quote parameters."""
     # good enough? shlex.quote alone is adding too many extras
     # must be readable, not immediately reuseable
     r = repr(s)
@@ -23,7 +27,8 @@ def quote(s):
     return s
 
 
-def DPopen(*args, **kwargs):
+def DPopen(*args, **kwargs): # pylint: disable=C0103:invalid-name
+    """Execute a command via `Popen`."""
     stderr = kwargs.get("stderr", subprocess.PIPE)
     if logger.isEnabledFor(logging.DEBUG):
         stderr = None
@@ -34,6 +39,7 @@ def DPopen(*args, **kwargs):
 
 
 def process_repr(cmd=None, env=None):
+    """Loosely format a command and its environment as a string."""
     if cmd is None:
         return "None"
 
@@ -54,118 +60,6 @@ def process_repr(cmd=None, env=None):
     ))
 
     return output
-
-
-class Command(object):
-    def __init__(self, command, env_extra={}) -> None:
-        self.env_extra = env_extra
-        self.env = {**environ, **env_extra}
-        self.command = tuple(map(str, command))
-
-    def reprexec(self):
-        rargs = map(quote, self.command)
-
-        str_env = " ".join((
-            f"{key}={quote(value)}"
-            for key, value
-            in self.env_extra.items()))
-
-        # Good enough
-        output = ""
-        if str_env:
-            output += str_env + " \\\n"
-
-        output += " ".join((
-            f"\\\n    {line}" if line.startswith("-") else line for line in rargs
-        ))
-
-        return output
-
-    __repr__ = reprexec
-
-    def exec(self, **kwargs):
-        """
-        Wrapper for subprocess.run.
-        
-        force 'text' output and returns 'stdout' as a tuple of lines
-        where the last line is omitted if empty (it generally is).
-
-        Return None on error (actual error, not the process retvalue)
-        """
-        if "text" not in kwargs:
-            kwargs["text"] = True
-
-        # allow overloading of stdin and stdout
-        # stderr is used for logging in case of errors
-        stdin  = subprocess.PIPE if "stdin"  not in kwargs else kwargs["stdin"]
-        stdout = subprocess.PIPE if "stdout" not in kwargs else kwargs["stdout"]
-        stderr = subprocess.PIPE
-
-        if logger.isEnabledFor(logging.DEBUG):
-            stderr = None
-
-        try:
-            result = subprocess.run(
-                self.command, **kwargs,
-                env=self.env,
-                stdin=stdin,
-                stdout=stdout,
-                stderr=stderr,
-                check=True,
-            )
-            out = result.stdout
-
-        except subprocess.CalledProcessError as e:
-            #logging.debug(e.stderr.rstrip())
-            logger.debug("Return code %d", e.returncode)
-            return None
-        except FileNotFoundError:
-            logger.critical("Command not found \"%s\"", self.command[0])
-            return None
-
-        if stdout == subprocess.PIPE:
-            lines = tuple(map(str.strip, out.split("\n")))
-            if lines:
-                if lines[-1] == "":
-                    return lines[:-1]
-            return result.returncode, lines
-
-        return result.returncode, []
-
-
-class CurryCommand(object):
-    def __init__(self, cmd, env, env_extra):
-        merged_env = {**env, **env_extra}
-        self.cmd, self.env, self.env_extra = (
-            list(map(str, cmd)),
-            merged_env,
-            env_extra,
-        )
-
-    def exec(self, *args):
-        command = self.cmd + list(args)
-        return run(command, env=self.env)
-
-    def reprexec(self, *args):
-        rargs = map(quote, self.cmd + list(args))
-
-        str_env = " ".join((
-            f"{key}={quote(value)}"
-            for key, value
-            in self.env_extra.items()))
-
-        # Good enough
-        output = ""
-        if str_env:
-            output += str_env + " \\\n"
-
-        output += " ".join((
-            f"\\\n    {line}" if line.startswith("-") else line for line in rargs
-        ))
-
-        return output
-
-    __repr__ = reprexec
 
 
 def run(*args, **kwargs):
@@ -193,7 +87,6 @@ def run(*args, **kwargs):
         out = result.stdout
 
     except subprocess.CalledProcessError as e:
-        #logging.debug(e.stderr.rstrip())
         logger.debug("Return code %d", e.returncode)
         return None
     except FileNotFoundError:
@@ -216,19 +109,15 @@ def check_binary(*names):
             return False
     return True
 
-    #out = run(("command", "-v", *names))
-    #if out is None:
-    #    return False
-    #return len(out) == len(names)
 
-
-def try_find_sockets(search, port):
+def try_find_sockets(search: str, port):
     """Try to locate available postgresql sockets."""
     if not check_binary("netstat"):
         return tuple()
 
     out = run(("netstat", "-lxn"))
     sockets = []
+
     for line in out:
         # not perfect but it works reasonably enough
         try:
@@ -236,7 +125,7 @@ def try_find_sockets(search, port):
         except IndexError:
             pass
 
-        folder = path.parent
+        folder = str(path.parent)
         name = path.name
         if search not in folder or str(port) not in name:
             continue
@@ -247,15 +136,16 @@ def try_find_sockets(search, port):
 
 
 def rlookup(ipaddr):
-    try:
-        response = socket.gethostbyaddr(ipaddr) # socket.getfqdn?
-        host = repr(response[0])
-        return host
-    except Exception:
-        return False
+    """Perform a reverse address lookup."""
+
+    hosts = socket.gethostbyaddr(ipaddr) # socket.getfqdn?
+    if len(hosts):
+        return repr(hosts[0])
+    return None
 
 
 def build_compress_command(profile):
+    """Helper function to prepare a compress command."""
     algo, level, extra = profile
 
     extension = {"xz": ".xz", "gzip": ".gz", "bzip2": ".bz2"}
@@ -277,6 +167,7 @@ def build_compress_command(profile):
 
 
 def build_tar_command(profile):
+    """Helper function to prepare a tar/compress command."""
     if not check_binary("tar"):
         raise NotImplementedError("Missing tar command")
 
@@ -301,6 +192,7 @@ def build_tar_command(profile):
 
 
 def parse_zabbix_version(query_result):
+    """Parse zabbix version from `dbversion` value."""
     raw_version = query_result[0]
     major = int(raw_version[:-6])
     minor = int(raw_version[-6:-4])
@@ -312,11 +204,18 @@ def parse_zabbix_version(query_result):
 
 
 def create_name(args):
+    """Create a suitable name for a backup."""
     dt = datetime.now().strftime("%Y%m%d-%H%M%S")
     return f"zabbix_{args.host}_{dt}"
 
 
 def preprocess_tables_lists(args, table_list):
+    """
+    Partition tables as
+        ignore tables,
+        schema-only tables,
+        and data-tables.
+    """
     logger.debug("Table list: %r", table_list)
     logger.info("Tables found: %r", len(table_list))
 
@@ -357,10 +256,5 @@ def pretty_log_args(args):
             value = "[omissis]"
 
         str_args.append(f"    {key:<24}: {value}")
-
-    #for key, value in dict_args.items():
-    #    if key in keys or key == "scope":
-    #        continue
-    #    str_args.append(f"    {key:<24}: {value}")
 
     logger.info("\n".join(str_args))

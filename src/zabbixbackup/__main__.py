@@ -1,4 +1,8 @@
+"""
+Zabbixbackup CLI entry point.
 
+See `python3 -m zabbixbackup --help` for help.
+"""
 
 if __name__ == "__main__":
     import os
@@ -38,9 +42,9 @@ if __name__ == "__main__":
 
     # Create log in the destination directory
     logger.debug("Log file: %s", log_path)
-    log_fh = log_path.open("w", encoding="utf-8")
-    logger_handler = logging.StreamHandler(log_fh)
-    logger.addHandler(logger_handler)
+    file_logger = logging.FileHandler(log_path)
+    file_logger.setLevel(logging.DEBUG)
+    logger.addHandler(file_logger)
 
     # Pretty print arguments as being parsed and processed
     pretty_log_args(args)
@@ -60,8 +64,8 @@ if __name__ == "__main__":
     save_files(args)
 
     # Detach file logger
-    logger.removeHandler(logger_handler)
-    log_fh.close()
+    logger.removeHandler(file_logger)
+    file_logger.close()
 
     # No file logging from here
 

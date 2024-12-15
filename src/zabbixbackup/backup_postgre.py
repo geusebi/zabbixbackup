@@ -1,3 +1,6 @@
+"""
+Dump a PostgreSQL database.
+"""
 import logging
 from os import fdopen, environ
 import tempfile
@@ -15,6 +18,7 @@ logger = logging.getLogger()
 
 
 def backup_postgresql(args):
+    """Perform a PostgreSQL dump in the current directory."""
     logger.info("DBMS: Postgresql")
     if not check_binary("psql", "pg_dump"):
         return 1, "Missing binaries: check 'psql' and 'pg_dump' are available and in PATH"

@@ -1,3 +1,6 @@
+"""
+Dump a MySQL or MariaSQL database.
+"""
 import logging
 from os import fdopen, environ
 import tempfile
@@ -15,6 +18,7 @@ logger = logging.getLogger()
 
 
 def backup_mysql(args):
+    """Perform a MySQL or MariaSQL dump in the current directory."""
     logger.info("DBMS: MySQL or MariaSql")
     if not check_binary("mysql", "mysqldump"):
         return 1, "Missing binaries: check 'mysql' and 'mysqldump' are available and in PATH"
@@ -96,6 +100,7 @@ def backup_mysql(args):
 
 
 def _mysql_auth(args):
+    """Set up an authentication file for mysql."""
     # Use provided loginfile and leave it untouched
     if args.loginfile is not None:
         pass
@@ -123,6 +128,7 @@ def _mysql_auth(args):
 
 
 def _mysql_query(args, query, description="query", log_func=logging.debug):
+    """Perform a query via `mysql`."""
     dbname = args.dbname
     env_extra = args.scope["env"]
 

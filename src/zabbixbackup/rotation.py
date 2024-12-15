@@ -1,3 +1,6 @@
+"""
+Helper functions for archives rotation.
+"""
 from pathlib import Path
 from shutil import rmtree
 import re

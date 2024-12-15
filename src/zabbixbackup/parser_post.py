@@ -1,9 +1,10 @@
+"""Zabbixbackup arguments post processing."""
 import sys
 from pathlib import Path
 import logging
 from getpass import getpass
 from .parser_defaults import PSqlArgs, MySqlArgs
-
+from . import console_logger
 
 __all__ = ["postprocess"]
 
@@ -90,6 +91,7 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
 
 
 def _parse_compression(parser, compr):
+    """Parse compression parameters."""
     # either a number (level), an algo (with default level 6)
     # or a combination of algo and number
 
@@ -123,6 +125,7 @@ def _parse_compression(parser, compr):
 
 
 def _handle_mysqlcompression(args):
+    """Handle mysql compression parameters."""
     parser = args.scope["parser"]
 
     if args.mysqlcompression == "-":
@@ -134,6 +137,7 @@ def _handle_mysqlcompression(args):
 
 
 def _handle_archiving(args):
+    """Handle archiving parameters."""
     parser = args.scope["parser"]
 
     # Uncompressed folder
@@ -150,24 +154,23 @@ def _handle_archiving(args):
 
 
 def _handle_verbosity(args):
-    """Set verbosity level."""
-    logger = logging.getLogger()
+    """Handle verbosity level."""
     if args.quiet:
         args.verbosity = "quiet"
-        logger.setLevel(logging.ERROR)
+        console_logger.setLevel(logging.ERROR)
     elif args.very_verbose:
         args.verbosity = "very"
-        logger.setLevel(logging.INFO)
+        console_logger.setLevel(logging.INFO)
     elif args.debug:
         args.verbosity = "debug"
-        logger.setLevel(logging.DEBUG)
+        console_logger.setLevel(logging.DEBUG)
     else:
         args.verbosity = "normal"
-        logger.setLevel(logging.WARNING)
+        console_logger.setLevel(logging.WARNING)
 
 
 def _handle_output(args):
-    """Check whether the output directory is useable."""
+    """Checks whether the output directory is useable."""
     parser = args.scope["parser"]
 
     if ((args.outdir.exists() and not args.outdir.is_dir()) or
@@ -177,6 +180,7 @@ def _handle_output(args):
 
 
 def _handle_zabbix_conf(args, user_args):
+    """Handle zabbix configuration file."""
     # args is a mix of user provided arguments and defaults
     # user_args has only values provided by the user
     # we need to update args if and only if the user has not
