@@ -13,7 +13,7 @@ if __name__ == "__main__":
     from .rotation import rotate
     import atexit
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger()
 
     # Parse and preprocess cli arguments
     args = parse(sys.argv[1:])
@@ -39,12 +39,8 @@ if __name__ == "__main__":
     # Create log in the destination directory
     logger.debug("Log file: %s", log_path)
     log_fh = log_path.open("w", encoding="utf-8")
-
     logger_handler = logging.StreamHandler(log_fh)
-    logger_handler.setLevel(logging.NOTSET)
     logger.addHandler(logger_handler)
-
-    logger.debug("Log file: %s", log_path)
 
     # Pretty print arguments as being parsed and processed
     pretty_log_args(args)

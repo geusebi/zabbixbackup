@@ -6,7 +6,7 @@ import logging
 from .utils import DPopen, run
 from .utils import build_tar_command, process_repr
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def parse_save_files(files):

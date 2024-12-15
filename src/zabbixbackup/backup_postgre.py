@@ -11,7 +11,7 @@ from .utils import (
     preprocess_tables_lists, process_repr, try_find_sockets,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def backup_postgresql(args):
@@ -39,7 +39,7 @@ def backup_postgresql(args):
 
     version, _ = parse_zabbix_version(raw_version)
     with open("zabbix_dbversion", "w", encoding="utf-8") as fh:
-        fh.writelines(["postgres\n", "{version}\n"])
+        fh.writelines(["postgres\n", f"{version}\n"])
 
     logger.info("Zabbix version: %s", version)
 

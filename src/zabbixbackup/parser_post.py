@@ -157,13 +157,13 @@ def _handle_verbosity(args):
         logger.setLevel(logging.ERROR)
     elif args.very_verbose:
         args.verbosity = "very"
-        logger.setLevel(logging.VERBOSE) # pylint: disable=E1101
+        logger.setLevel(logging.INFO)
     elif args.debug:
         args.verbosity = "debug"
         logger.setLevel(logging.DEBUG)
     else:
         args.verbosity = "normal"
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.WARNING)
 
 
 def _handle_output(args):

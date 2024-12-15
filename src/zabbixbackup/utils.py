@@ -7,7 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from .tables import zabbix
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def quote(s):
@@ -318,16 +318,16 @@ def create_name(args):
 
 def preprocess_tables_lists(args, table_list):
     logger.debug("Table list: %r", table_list)
-    logger.verbose("Tables found: %r", len(table_list))
+    logger.info("Tables found: %r", len(table_list))
 
     tables = set(table_list)
     config = tables.intersection(zabbix.config)
     monitoring = tables.intersection(zabbix.monitoring)
     unknown = tables.difference(config, monitoring)
 
-    logger.verbose("Config tables: %d", len(config))
-    logger.verbose("Monitoring tables: %d", len(monitoring))
-    logger.verbose("Unknown tables: %d", len(unknown))
+    logger.info("Config tables: %d", len(config))
+    logger.info("Monitoring tables: %d", len(monitoring))
+    logger.info("Unknown tables: %d", len(unknown))
 
     nodata, ignore, fail = [], [], []
     if args.monitoring == "nodata":
@@ -363,4 +363,4 @@ def pretty_log_args(args):
     #        continue
     #    str_args.append(f"    {key:<24}: {value}")
 
-    logger.verbose("\n".join(str_args))
+    logger.info("\n".join(str_args))

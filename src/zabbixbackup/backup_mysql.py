@@ -11,11 +11,11 @@ from .utils import (
     preprocess_tables_lists, process_repr,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def backup_mysql(args):
-    logger.verbose("DBMS: MySQL or MariaSql")
+    logger.info("DBMS: MySQL or MariaSql")
     if not check_binary("mysql", "mysqldump"):
         return 1, "Missing binaries: check 'mysql' and 'mysqldump' are available and in PATH"
 
@@ -32,7 +32,7 @@ def backup_mysql(args):
 
     version, _ = parse_zabbix_version(raw_version)
     with open("zabbix_dbversion", "w", encoding="utf-8") as fh:
-        fh.writelines(["mysql\n", "{version}\n"])
+        fh.writelines(["mysql\n", f"{version}\n"])
 
     logging.info("Zabbix version: %s", version)
 

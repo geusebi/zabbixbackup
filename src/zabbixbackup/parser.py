@@ -1,14 +1,11 @@
 import argparse
 from pathlib import Path
-import logging
 
 from .parser_defaults import PSqlArgs, MySqlArgs
 from .parser_post import postprocess
 
-logger = logging.getLogger(__name__)
 
 _DESCRIPTION = "zabbix dump for {dbms} inspired and directly translated from..."
-
 
 def parse(argv):
     """

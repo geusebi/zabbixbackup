@@ -4,7 +4,7 @@ import re
 import logging
 from .parser_defaults import PSqlArgs, MySqlArgs
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 re_cfg = re.compile(r"""
@@ -53,7 +53,7 @@ def rotate(args: PSqlArgs|MySqlArgs):
     logger.info("Deleting %d and keeping %d backup/s", len(remove), len(keep))
 
     for _, item in remove:
-        logger.verbose(f"    deleting backup '{item}'")
+        logger.info("    deleting backup '%s'", item)
         if not args.dry_run:
             if item.is_file():
                 item.unlink()
