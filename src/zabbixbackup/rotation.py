@@ -61,4 +61,4 @@ def rotate(args: PSqlArgs|MySqlArgs):
                 rmtree(item)
 
     for _, item in keep:
-        logger.debug("    keeping backup 'item'", %s)
+        logger.debug("    keeping backup '%s'", item)
