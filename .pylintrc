@@ -1,3 +1,6 @@
+[MASTER]
+
+[MESSAGES CONTROL]
 disable=
     fixme,
     unknown-option-value
