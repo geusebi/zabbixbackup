@@ -5,6 +5,7 @@ from pathlib import Path
 from shutil import rmtree
 import re
 import logging
+from typing import Union
 from .parser_defaults import PSqlArgs, MySqlArgs
 
 logger = logging.getLogger()
@@ -24,7 +25,7 @@ re_cfg = re.compile(r"""
 """, re.VERBOSE)
 
 
-def rotate(args: PSqlArgs|MySqlArgs):
+def rotate(args: Union[PSqlArgs, MySqlArgs]):
     """
     Perform an archive rotation keeping the last 'args.n' archives.
     """

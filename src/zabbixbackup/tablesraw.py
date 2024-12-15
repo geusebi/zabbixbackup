@@ -1,3 +1,6 @@
+"""
+Zabbix tables accross versions.
+"""
 __all__ = ["raw_tables"]
 
 MONITORING = False

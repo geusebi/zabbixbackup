@@ -14,9 +14,12 @@ from .utils import (
     preprocess_tables_lists, process_repr,
 )
 
+# pylint: disable=R0801
+
 logger = logging.getLogger()
 
 
+# pylint: disable=R0914:too-many-locals, R0911:too-many-return-statements
 def backup_mysql(args):
     """Perform a MySQL or MariaSQL dump in the current directory."""
     logger.info("DBMS: MySQL or MariaSql")
@@ -174,6 +177,7 @@ def _mysql_query(args, query, description="query", log_func=logging.debug):
     return stdout.splitlines()
 
 
+# pylint: disable=R0913:too-many-arguments
 def _mysql_dump(
     args, params, ignoring, outpath, description="dump cmd", log_func=logging.debug
 ):

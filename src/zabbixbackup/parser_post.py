@@ -3,13 +3,14 @@ import sys
 from pathlib import Path
 import logging
 from getpass import getpass
+from typing import Union
 from .parser_defaults import PSqlArgs, MySqlArgs
 from . import console_logger
 
 __all__ = ["postprocess"]
 
 
-def postprocess(args: PSqlArgs|MySqlArgs, user_args):
+def postprocess(args: Union[PSqlArgs, MySqlArgs], user_args):
     """
     Adjust the arguments according to zabbix behaviour and user selection.
 

@@ -2,7 +2,6 @@
 Helper functions for zabbixbackup.
 """
 import logging
-from os import environ
 import shutil
 import socket
 import subprocess

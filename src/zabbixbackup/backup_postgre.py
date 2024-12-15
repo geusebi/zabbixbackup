@@ -14,9 +14,12 @@ from .utils import (
     preprocess_tables_lists, process_repr, try_find_sockets,
 )
 
+# pylint: disable=R0801
+
 logger = logging.getLogger()
 
 
+# pylint: disable=R0914:too-many-locals, R0911:too-many-return-statements
 def backup_postgresql(args):
     """Perform a PostgreSQL dump in the current directory."""
     logger.info("DBMS: Postgresql")

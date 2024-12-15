@@ -1,3 +1,6 @@
+"""
+Expose zabbix tables names list.
+"""
 from types import SimpleNamespace as NS
 from collections import namedtuple
 from .tablesraw import raw_tables, CONFIG, MONITORING
