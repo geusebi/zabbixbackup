@@ -60,58 +60,60 @@ DBMS:
     mysql             (see zabbixbackup mysql --help)
 ```
 
-## Options documentation and examples
+## Options
 
-- [DBMS](#dbms)
+**Database engine**
+- [`<DBMS> (psql|mysql)`](#dbms)
 
 **Main**
-- [--read-zabbix-config](#readzabbixconfig)
-- [--zabbix-config ZABBIX_CONFIG](#zabbixconfig)
-- [--read-mysql-config](#readmysqlconfig) (MySQL specific)
-- [--mysql-config MYSQL_CONFIG](#mysqlconfig) (MySQL specific)
-- [--dry-run](#dryrun)
+- [`--read-zabbix-config`](#readzabbixconfig)
+- [`--zabbix-config ZABBIX_CONFIG`](#zabbixconfig)
+- [`--read-mysql-config`](#readmysqlconfig) (MySQL specific)
+- [`--mysql-config MYSQL_CONFIG`](#mysqlconfig) (MySQL specific)
+- [`--dry-run`](#dryrun)
 
 **Connection**
-- [--host HOST](#host) (special for Postgres)
-- [--port PORT](#port)
-- [--sock SOCK](#sock) (MySQL specific)
-- [--username USER](#username)
-- [--passwd PASSWD](#passwd)
-- [--keep-login-file](#keeploginfile)
-- [--login-file LOGINFILE](#loginfile)
+- [`--host HOST`](#host) (special for Postgres)
+- [`--port PORT`](#port)
+- [`--sock SOCK`](#sock) (MySQL specific)
+- [`--username USER`](#username)
+- [`--passwd PASSWD`](#passwd)
+- [`--keep-login-file`](#keeploginfile)
+- [`--login-file LOGINFILE`](#loginfile)
 
-- [--database DBNAME](#dbname)
-- [--schema SCHEMA](#schema) (Postgres specific)
-- [--reverse-lookup](#reverselookup) (NOT IMPLEMENTED)
+- [`--database DBNAME`](#dbname)
+- [`--schema SCHEMA`](#schema) (Postgres specific)
+- [`--reverse-lookup`](#reverselookup) (**Not implemented**)
 
 **Dump action**
-- [--unknown-action UNKNOWN](#unknownaction)
-- [--monitoring-action MONITORING](#monitoringaction)
-- [--add-columns](#addcolumns)
+- [`--unknown-action UNKNOWN`](#unknownaction)
+- [`--monitoring-action MONITORING`](#monitoringaction)
+- [`--add-columns`](#addcolumns)
 
 **Dump compression**
-- [--pgformat PGFORMAT](#pgformat) (Postgres specific)
-- [--pgcompression PGCOMPRESSION](#pgcompression) (Postgres specific)
-- [--mysqlcompression MYSQLCOMPRESSION](#mysqlcompression) (MySQL specific)
+- [`--pgformat PGFORMAT`](#pgformat) (Postgres specific)
+- [`--pgcompression PGCOMPRESSION`](#pgcompression) (Postgres specific)
+- [`--mysqlcompression MYSQLCOMPRESSION`](#mysqlcompression) (MySQL specific)
 
 **Configuration files**
-- [--save-files](#savefiles)
-- [--files FILES](#files)
+- [`--save-files`](#savefiles)
+- [`--files FILES`](#files)
 
 **Output**
-- [--archive ARCHIVE](#archive)
-- [--outdir OUTDIR](#outdir)
-- [--rotate ROTATE](#rotate)
+- [`--archive ARCHIVE`](#archive)
+- [`--outdir OUTDIR`](#outdir)
+- [`--rotate ROTATE`](#rotate)
 
 **Verbosity**
-- [--quiet](#verbosity)
-- [--verbose](#verbosity)
-- [--very-verbose](#verbosity)
-- [--debug](#verbosity)
+- [`--quiet`](#verbosity)
+- [`--verbose`](#verbosity)
+- [`--very-verbose`](#verbosity)
+- [`--debug`](#verbosity)
+
 
 <a name="dbms"></a>
 ### Database engine
-**```<DBMS>```**
+**```<DBMS> (psql|mysql)```**
 
 _Default: no default (mandatory)_
 
@@ -121,7 +123,7 @@ Database engine to use. Either postgresql or mysql (mariasql compatible).
 ### Read zabbix configuration
 **```--read-zabbix-config, -z```**
 
-_Default: False_
+_Default: `False`_
 
 Try to read database host and credentials from Zabbix config.
 The file is read and parsed trying to collect as much as possible.
@@ -133,7 +135,7 @@ Implicit if `--zabbix-config` is set.
 ### Zabbix configuration file
 **```--zabbix-config ZBX_CONFIG, -Z ZBX_CONFIG```**
 
-_Default: /etc/zabbix/zabbix_server.conf_
+_Default: `/etc/zabbix/zabbix_server.conf`_
 
 Zabbix configuration file path.
 
@@ -141,7 +143,7 @@ Zabbix configuration file path.
 ### Read MySQL configuration (MySQL specific)
 **```--read-mysql-config, -c```**
 
-_Default: False_
+_Default: `False`_
 
 Read database host and credentials from MySQL config file.
 Implicit if `--mysql-config` is set.
@@ -150,7 +152,7 @@ Implicit if `--mysql-config` is set.
 ### MySQL configuration file (MySQL specific)
 **```--mysql-config MYSQL_CONFIG, -C MYSQL_CONFIG```**
 
-_Default: /etc/mysql/my.cnf_
+_Default: `/etc/mysql/my.cnf`_
 
 MySQL configuration file path.
 Implicit if `--read-mysql-config` is set.
@@ -159,7 +161,7 @@ Implicit if `--read-mysql-config` is set.
 ### Dry run
 **```--dry-run, -D```**
 
-_Default: False_
+_Default: `False`_
 
 Do not create the actual backup, only show dump commands.
 **Be aware that the database will be queried** for tables selection and
@@ -170,9 +172,9 @@ and debugging.
 ### Hostname (special for Postgres)
 **```--host, -H```**
 
-_Default: 127.0.0.1_
+_Default: `127.0.0.1`_
 
-Hostname/IP of DBMS server, to specify a blank value pass '-'.
+Hostname/IP of DBMS server, to specify a blank value pass `-`.
 
 For postgresql special rules might apply (see Postgres `psql` and `pg_dump`
 online documentation for sockets).
@@ -181,7 +183,7 @@ online documentation for sockets).
 ### Port
 **```--port PORT, -P PORT```**
 
-_Default: 5432 for Postgres, 3306 for MySQL)_
+_Default: `5432` for Postgres, `3306` for MySQL)_
 
 Database connection port.
 
@@ -189,7 +191,7 @@ Database connection port.
 ### Socket (Mysql specific)
 **```--socket SOCK, -S SOCK```**
 
-_Default: None_
+_Default: `None`_
 
 Path to MySQL socket file. Alternative to specifying host.
 
@@ -197,7 +199,7 @@ Path to MySQL socket file. Alternative to specifying host.
 ### Username
 **```--user USER, -u USER```**
 
-_Default: zabbix_
+_Default: `zabbix`_
 
 Username to use for the database connection.
 
@@ -205,9 +207,9 @@ Username to use for the database connection.
 ### Password
 **```--passwd PASSWD, -p PASSWD```**
 
-_Default: None_
+_Default: `None`_
 
-Database login password. Specify '-' for an interactive prompt.
+Database login password. Specify `-` for an interactive prompt.
 For Postgres, a `.pgpass` will be created to connect to the database and then
 deleted (might be saved with the backup).
 
@@ -215,27 +217,27 @@ deleted (might be saved with the backup).
 ### Keep login file
 **```--keep-login-file```**
 
-_Default: False_
+_Default: `False`_
 
-Do not delete login file (either .pgpass or mylogin.cnf) on program exit.
+Do not delete login file (either `.pgpass` or `mylogin.cnf`) on program exit.
 
 Useful to create the login file and avoid clear password or interactive prompt.
 
-For Postgres, the saved file is not hidden (pgpass).
+For postgres, the saved file is not hidden (`pgpass`).
 
 <a name="loginfile"></a>
 ### Login file
 **```--login-file LOGINFILE```**
 
-_Default: None_
+_Default: `None`_
 
-Use this file (either .pgpass or mylogin.cnf) for the authentication.
+Use this file (either `.pgpass` or `mylogin.cnf`) for the authentication.
 
 <a name="dbname"></a>
 ### Database name
 **```--database DBNAME, -d DBNAME```**
 
-_Default: zabbix_
+_Default: `zabbix`_
 
 The name of the database to connect to.
 
@@ -243,7 +245,7 @@ The name of the database to connect to.
 ### Database schema (Postgres specific)
 **```--schema SCHEMA, -s SCHEMA```**
 
-_Default: public_
+_Default: `public`_
 
 The name of the schema to use.
 
@@ -251,7 +253,7 @@ The name of the schema to use.
 ### Reverse lookup
 **```--reverse-lookup, -n```**
 
-_Default: True_
+_Default: `True`_
 
 (NOT IMPLEMENTED) Perform a reverse lookup of the IP address for the host.
 
@@ -259,7 +261,7 @@ _Default: True_
 ### Unknown tables action
 **```--unknown-action {dump,nodata,ignore,fail}, -U {dump,nodata,ignore,fail}```**
 
-_Default: ignore_
+_Default: `ignore`_
 
 Action for unknown tables.
 
@@ -271,7 +273,7 @@ backup in case of an unknown table.
 ### Monitoring tables action
 **```--monitoring-action {dump,nodata}, -U {dump,nodata}```**
 
-_Default: nodata_
+_Default: `nodata`_
 
 Action for monitoring table.
 
@@ -282,7 +284,7 @@ the definitions.
 ### Add columns
 **```--add-columns, -N```**
 
-_Default: False_
+_Default: `False`_
 
 Add column names in INSERT clauses and quote them as needed.
 
@@ -290,7 +292,7 @@ Add column names in INSERT clauses and quote them as needed.
 ### Postgres dump format
 **```--pgformat PGFORMAT```**
 
-_Default: 'custom'_
+_Default: `custom`_
 
 Dump format, will mandate the file output format.
 
@@ -300,27 +302,27 @@ Available formats: plain, custom, directory, or tar (see postgres documentation)
 ### Postgres dump compression
 **```--pgcompression PGCOMPRESSION```**
 
-_Default: None_
+_Default: `None`_
 
-Passed as-is to pg_dump --compress, might be implied by format (see postgres documentation).
+Passed as-is to `pg_dump` `--compress`, might be implied by format (see postgres documentation).
 
-Be aware that the postgre 'tar' format won't be compressed. In that case you could use '--archive'.
+Be aware that the postgres `tar` format won't be compressed. In that case you could use `--archive`.
 
 <a name="mysqlcompression"></a>
 ### Dump compression
 **```--mysqlcompression MYSQLCOMPRESSION```**
 
-_Default: '-'_
+_Default: `-`_
 
 Mysql dump compression.
 
-'-' to leave the dump uncompressed as is.
+`-` to leave the dump uncompressed as is.
 
 Available compression formats are `xz`, `gzip` and `bzip2`.
-Use `:<LEVEL>` to set a compression.
+Use `:&lt;LEVEL&gt;` to set a compression.
 
 The compression binary must be available in current shell.
-'xz', 'gzip', and 'bzip2' will take precedence and '7z' is used as fallback (might be useful on Windows platforms).
+`xz`, `gzip`, and `bzip2` will take precedence and `7z` is used as fallback (might be useful on Windows platforms).
 
 **NOTE: on windows platforms this result is a compressed file with CRLF line termination instead of LF.**
 
@@ -328,7 +330,7 @@ The compression binary must be available in current shell.
 ### Save configuration files
 **```--save-files```**
 
-_Default: False_
+_Default: `False`_
 
 Save folders and other files in the backup (see --files).
 
@@ -336,7 +338,7 @@ Save folders and other files in the backup (see --files).
 ### File index to save with the backup
 **```--files FILES```**
 
-_Default: '-'_
+_Default: `-`_
 
 Save folders and other files as listed in this index file.
 Non existant will be ignored. Directory structure is replicated (copied via
@@ -351,11 +353,11 @@ If `FILES` is `-` then the standard files are selected, i.e:
 ### Backup archive format
 **```--archive ARCHIVE, -a ARCHIVE```**
 
-_Default: '-'_
+_Default: `-`_
 
-Use 'tar' to create a tar archive.
+Use `tar` to create a tar archive.
 
-'-' to leave the backup uncompressed as a folder.
+`-` to leave the backup uncompressed as a folder.
 
 Available compression formats are `xz`, `gzip` and `bzip2`.
 Use `:<LEVEL>` to set a compression level. I.e. `--archive xz:6`.
@@ -364,7 +366,7 @@ Use `:<LEVEL>` to set a compression level. I.e. `--archive xz:6`.
 ### Output directory
 **```--outdir OUTDIR, -o OUTDIR```**
 
-_Default: '.'_
+_Default: `.`_
 
 The destination directory to save the backup to.
 
@@ -372,9 +374,9 @@ The destination directory to save the backup to.
 ### Backup rotation
 **```--rotate ROTATE, -r ROTATE```**
 
-_Default: '0'_
+_Default: `0`_
 
-Rotate backups while keeping up 'R' old backups. Uses filenames to find old backups.
+Rotate backups while keeping up `R` old backups. Uses filenames to find old backups.\
 `0 = keep everything`.
 
 <a name="verbosity"></a>
@@ -388,14 +390,14 @@ Rotate backups while keeping up 'R' old backups. Uses filenames to find old back
 
 **```--debug```** 
 
-_Default: verbose_
+_Default: `verbose`_
 
-Don't print anything except unrecoverable errors (quiet),
-print informations only (verbose),
-print even more informations (very verbose),
+Don't print anything except unrecoverable errors (quiet),\
+print informations only (verbose),\
+print even more informations (very verbose),\
 print everything (debug).
 
-### Postgres SQL: second level CLI
+## Postgres SQL: second level CLI
 
 `zabbixbackup psql --help`
 ```
@@ -404,7 +406,7 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
                          [-N] [-x PGCOMPRESSION]
-                         [-f {plain,custom,tar,directory}] [--save-files]
+                         [-f {custom,directory,tar,plain}] [--save-files]
                          [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
                          [-q | -v | -V | --debug]
 
@@ -461,7 +463,7 @@ dump level compression options:
   -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
                         passed as-is to pg_dump --compress, might be implied
                         by format. (default: None)
-  -f {plain,custom,tar,directory}, --pgformat {plain,custom,tar,directory}
+  -f {custom,directory,tar,plain}, --pgformat {custom,directory,tar,plain}
                         dump format, will mandate the file output format.
                         (default: custom)
 
@@ -494,7 +496,7 @@ verbosity:
   --debug               print everything. (default: False)
 ```
 
-### MySQL: second level CLI
+## MySQL: second level CLI
 
 `zabbixbackup mysql --help`
 ```

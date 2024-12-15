@@ -60,7 +60,7 @@ DBMS:
     mysql             (see zabbixbackup mysql --help)
 ```
 
-### Postgres SQL: second level CLI
+## Postgres SQL: second level CLI
 
 `zabbixbackup psql --help`
 ```
@@ -69,7 +69,7 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
                          [-N] [-x PGCOMPRESSION]
-                         [-f {plain,custom,tar,directory}] [--save-files]
+                         [-f {custom,directory,tar,plain}] [--save-files]
                          [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
                          [-q | -v | -V | --debug]
 
@@ -126,7 +126,7 @@ dump level compression options:
   -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
                         passed as-is to pg_dump --compress, might be implied
                         by format. (default: None)
-  -f {plain,custom,tar,directory}, --pgformat {plain,custom,tar,directory}
+  -f {custom,directory,tar,plain}, --pgformat {custom,directory,tar,plain}
                         dump format, will mandate the file output format.
                         (default: custom)
 
@@ -159,7 +159,7 @@ verbosity:
   --debug               print everything. (default: False)
 ```
 
-### MySQL: second level CLI
+## MySQL: second level CLI
 
 `zabbixbackup mysql --help`
 ```
