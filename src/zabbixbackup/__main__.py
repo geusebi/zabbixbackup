@@ -27,8 +27,7 @@ if __name__ == "__main__":
     outdir = args.outdir
     abs_outdir = outdir.absolute()
 
-    name = create_name(args)
-    archive_dir = outdir / name
+    archive_dir = outdir / create_name(args)
     abs_archive_dir = archive_dir.absolute()
 
     # Chdir into this backup directory

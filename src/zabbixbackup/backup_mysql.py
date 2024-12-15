@@ -177,7 +177,7 @@ def _mysql_query(args, query, description="query", log_func=logging.debug):
     return stdout.splitlines()
 
 
-# pylint: disable=R0913:too-many-arguments
+# pylint: disable=R0913:too-many-arguments, R0917:too-many-positional-arguments
 def _mysql_dump(
     args, params, ignoring, outpath, description="dump cmd", log_func=logging.debug
 ):
