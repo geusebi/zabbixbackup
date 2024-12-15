@@ -4,6 +4,8 @@ import re
 import logging
 from .parser_defaults import PSqlArgs, MySqlArgs
 
+logger = logging.getLogger(__name__)
+
 
 re_cfg = re.compile(r"""
     zabbix_                             # suffix
@@ -24,10 +26,10 @@ def rotate(args: PSqlArgs|MySqlArgs):
     Perform an archive rotation keeping the last 'args.n' archives.
     """
     n = args.rotate
-    
+
     if n <= 0:
         return
-    
+
     host = args.host
 
     # create a list of tuples in the form of [(datetime as int, folder)]
@@ -46,12 +48,12 @@ def rotate(args: PSqlArgs|MySqlArgs):
     backups = sorted(backups)
     remove, keep = backups[:-n], backups[-n:]
 
-    logging.info("Rotate backups")
-    logging.info(f"Found {len(backups)} backup/s")
-    logging.info(f"Deleting {len(remove)} and keeping {len(keep)} backup/s")
+    logger.info("Rotate backups")
+    logger.info("Found %d backup/s", len(backups))
+    logger.info("Deleting %d and keeping %d backup/s", len(remove), len(keep))
 
     for _, item in remove:
-        logging.verbose(f"    deleting backup '{item}'")
+        logger.verbose(f"    deleting backup '{item}'")
         if not args.dry_run:
             if item.is_file():
                 item.unlink()
@@ -59,4 +61,4 @@ def rotate(args: PSqlArgs|MySqlArgs):
                 rmtree(item)
 
     for _, item in keep:
-        logging.debug(f"    keeping backup '{item}'")
+        logger.debug("    keeping backup 'item'", %s)

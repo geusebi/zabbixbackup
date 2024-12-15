@@ -11,14 +11,16 @@ from .utils import (
     preprocess_tables_lists, process_repr,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def backup_mysql(args):
-    logging.verbose(f"DBMS: MySQL or MariaSql")
+    logger.verbose("DBMS: MySQL or MariaSql")
     if not check_binary("mysql", "mysqldump"):
         return 1, "Missing binaries: check 'mysql' and 'mysqldump' are available and in PATH"
 
     args.scope["env"] = {}
-    
+
     # Phase 0: setup authentication
     _mysql_auth(args)
 
@@ -29,10 +31,10 @@ def backup_mysql(args):
         return 2, "Could not retrieve db version (see logs using --debug)"
 
     version, _ = parse_zabbix_version(raw_version)
-    with open("zabbix_dbversion", "w") as fh:
+    with open("zabbix_dbversion", "w", encoding="utf-8") as fh:
         fh.writelines(["mysql\n", "{version}\n"])
 
-    logging.info(f"Zabbix version: {version}")
+    logging.info("Zabbix version: %s", version)
 
     # Phase 2: Perform the actual backup
 
@@ -106,13 +108,13 @@ def _mysql_auth(args):
 
         logincnf_path.chmod(0o600)
         fh.writelines([
-                f"[client]\n",
+                "[client]\n",
                 f"password={args.passwd}\n",
             ])
         fh.close()
 
         abs_logincnf = logincnf_path.absolute()
-        atexit.register(lambda: abs_logincnf.unlink())
+        atexit.register(abs_logincnf.unlink)
 
         args.loginfile = logincnf_path
 
@@ -123,7 +125,7 @@ def _mysql_auth(args):
 def _mysql_query(args, query, description="query", log_func=logging.debug):
     dbname = args.dbname
     env_extra = args.scope["env"]
-    
+
     # mysql command will be used to inspect the database
     query_cmd = [
         "mysql",
@@ -199,7 +201,7 @@ def _mysql_dump(
 
     if args.columns:
         dump_cmd += ["--complete-insert", "--quote-names", ]
-    
+
     if args.verbosity in ("very", "debug"):
         dump_cmd += ["--verbose"]
 
@@ -209,7 +211,7 @@ def _mysql_dump(
     # if there's no compression let mysqldump save the file
     if compressor_profile is None:
         dump_cmd += ["--result-file", outpath]
-    
+
     # database to dump and tables exclusion
     dump_cmd += [dbname]
     dump_cmd += ignoring
@@ -235,10 +237,11 @@ def _mysql_dump(
     # either run a simple dump or a 'dump | compress'
     dump = DPopen(dump_cmd, env=dump_env, stdout=PIPE, text=True)
 
+    # pylint: disable=E0606, R1705
     if not compressor_profile:
         dump.communicate()
         return dump.returncode == 0
     else:
         compress = DPopen(compr_cmd, env=compr_env, stdin=dump.stdout)
         compress.communicate()
-        return compress.returncode == 0 
+        return compress.returncode == 0

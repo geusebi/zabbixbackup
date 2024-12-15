@@ -1,7 +1,8 @@
 
+
 if __name__ == "__main__":
     import os
-    from sys import argv
+    import sys
     import logging
     from pathlib import Path
     from .parser import parse
@@ -12,8 +13,10 @@ if __name__ == "__main__":
     from .rotation import rotate
     import atexit
 
+    logger = logging.getLogger(__name__)
+
     # Parse and preprocess cli arguments
-    args = parse(argv[1:])
+    args = parse(sys.argv[1:])
     scope = args.scope
 
     # TODO: rlookup here
@@ -24,8 +27,8 @@ if __name__ == "__main__":
     archive_dir = outdir / name
     abs_archive_dir = archive_dir.absolute()
 
-    # Chdir into this backup directory 
-    logging.debug(f"Create archive diretory and chdir to it: {archive_dir}")
+    # Chdir into this backup directory
+    logger.debug("Create archive diretory and chdir to it: %s", archive_dir)
     prev_cwd = Path(os.getcwd()).absolute()
     atexit.register(lambda: os.chdir(prev_cwd))
     archive_dir.mkdir()
@@ -34,13 +37,14 @@ if __name__ == "__main__":
     log_path = Path("dump.log")
 
     # Create log in the destination directory
-    logging.debug(f"Log file: {log_path}")
-    log_fh = log_path.open("w")
-    logger = logging.getLogger()
+    logger.debug("Log file: %s", log_path)
+    log_fh = log_path.open("w", encoding="utf-8")
+
     logger_handler = logging.StreamHandler(log_fh)
+    logger_handler.setLevel(logging.NOTSET)
     logger.addHandler(logger_handler)
 
-    logging.debug(f"Log file: {log_path}")
+    logger.debug("Log file: %s", log_path)
 
     # Pretty print arguments as being parsed and processed
     pretty_log_args(args)
@@ -49,15 +53,17 @@ if __name__ == "__main__":
         status, message = backup_postgresql(args)
     elif scope["dbms"] == "mysql":
         status, message = backup_mysql(args)
+    else:
+        status, message = 100, "invalid dbms {scope['dbms']}"
 
     # exit immediately if something went wrong
     if status != 0:
-        logging.fatal(message)
-        exit(status)
+        logger.fatal(message)
+        sys.exit(status)
 
     save_files(args)
 
-    # Detach file logger 
+    # Detach file logger
     logger.removeHandler(logger_handler)
     log_fh.close()
 

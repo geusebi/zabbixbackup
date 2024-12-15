@@ -1,4 +1,4 @@
-__all__ = ["raw_table"]
+__all__ = ["raw_tables"]
 
 MONITORING = False
 CONFIG = True

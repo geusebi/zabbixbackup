@@ -1,14 +1,13 @@
-from copy import deepcopy
 import logging
 from os import environ
-import shlex
 import shutil
 import socket
 import subprocess
 from pathlib import Path
 from datetime import datetime
 from .tables import zabbix
-#from shlex import quote as shquote
+
+logger = logging.getLogger(__name__)
 
 
 def quote(s):
@@ -23,18 +22,16 @@ def quote(s):
 
     return s
 
+
 def DPopen(*args, **kwargs):
     stderr = kwargs.get("stderr", subprocess.PIPE)
-    try:
-        logger = logging.getLogger()
-        if logger.isEnabledFor(logging.DEBUG):
-            stderr = None
-    except Exception:
-        pass
+    if logger.isEnabledFor(logging.DEBUG):
+        stderr = None
 
     kwargs["stderr"] = stderr
 
     return subprocess.Popen(*args, **kwargs)
+
 
 def process_repr(cmd=None, env=None):
     if cmd is None:
@@ -60,7 +57,7 @@ def process_repr(cmd=None, env=None):
 
 
 class Command(object):
-    def __init__(self, command, env_extra={}, **kwargs) -> None:
+    def __init__(self, command, env_extra={}) -> None:
         self.env_extra = env_extra
         self.env = {**environ, **env_extra}
         self.command = tuple(map(str, command))
@@ -103,12 +100,9 @@ class Command(object):
         stdin  = subprocess.PIPE if "stdin"  not in kwargs else kwargs["stdin"]
         stdout = subprocess.PIPE if "stdout" not in kwargs else kwargs["stdout"]
         stderr = subprocess.PIPE
-        try:
-            logger = logging.getLogger()
-            if logger.isEnabledFor(logging.DEBUG):
-                stderr = None
-        except Exception:
-            pass
+
+        if logger.isEnabledFor(logging.DEBUG):
+            stderr = None
 
         try:
             result = subprocess.run(
@@ -123,10 +117,10 @@ class Command(object):
 
         except subprocess.CalledProcessError as e:
             #logging.debug(e.stderr.rstrip())
-            logging.debug(f"return code {e.returncode}")
+            logger.debug("Return code %d", e.returncode)
             return None
         except FileNotFoundError:
-            logging.critical(f"Command not found \"{self.command[0]}\"")
+            logger.critical("Command not found \"%s\"", self.command[0])
             return None
 
         if stdout == subprocess.PIPE:
@@ -168,7 +162,7 @@ class CurryCommand(object):
         output += " ".join((
             f"\\\n    {line}" if line.startswith("-") else line for line in rargs
         ))
-        
+
         return output
 
     __repr__ = reprexec
@@ -187,12 +181,8 @@ def run(*args, **kwargs):
         kwargs["text"] = True
 
     stderr = subprocess.PIPE
-    try:
-        logger = logging.getLogger()
-        if logger.isEnabledFor(logging.DEBUG):
-            stderr = None
-    except Exception:
-        pass
+    if logger.isEnabledFor(logging.DEBUG):
+        stderr = None
 
     try:
         result = subprocess.run(
@@ -204,10 +194,10 @@ def run(*args, **kwargs):
 
     except subprocess.CalledProcessError as e:
         #logging.debug(e.stderr.rstrip())
-        logging.debug(f"return code {e.returncode}")
+        logger.debug("Return code %d", e.returncode)
         return None
     except FileNotFoundError:
-        logging.critical(f"Command not found \"{args[0]}\"")
+        logger.critical("Command not found \"%s\"", args[0])
         return None
 
     lines = tuple(map(str.strip, out.split("\n")))
@@ -245,33 +235,16 @@ def try_find_sockets(search, port):
             path = Path(line.split()[-1])
         except IndexError:
             pass
-            folder = path.parent
-            name = path.name
-            if search not in folder or str(port) not in name:
-                continue
 
-            sockets.append(path)
+        folder = path.parent
+        name = path.name
+        if search not in folder or str(port) not in name:
+            continue
+
+        sockets.append(path)
 
     return tuple(sockets)
 
-
-"""
-def rlookup(ip):
-    output = run(["dig", "+noall", "+answer", "-x", ip])
-    if not output:
-        return None
-
-    parts = list(map(str.strip, output.split()))
-    if len(parts) == 0:
-        return None
-    dn = parts[-1]
-
-    subdomains = dn.split(".")
-    if len(subdomains) == 0:
-        return None
-
-    return subdomains[0]
-"""
 
 def rlookup(ipaddr):
     try:
@@ -300,12 +273,12 @@ def build_compress_command(profile):
         pipe = ("7z", "a", f"-t{algo}", "-si", )
         return env, cmd, ext, pipe
 
-    raise NotImplemented(f"Compression binary not available '{algo}")
+    raise NotImplementedError(f"Compression binary not available '{algo}'")
 
 
 def build_tar_command(profile):
     if not check_binary("tar"):
-        raise NotImplemented("Missing tar command")
+        raise NotImplementedError("Missing tar command")
 
     algo, level, extra = profile
 
@@ -332,7 +305,7 @@ def parse_zabbix_version(query_result):
     major = int(raw_version[:-6])
     minor = int(raw_version[-6:-4])
     revision = int(raw_version[-4:])
-    
+
     version = f"{major}.{minor}.{revision}"
 
     return version, (major, minor, revision)
@@ -344,17 +317,17 @@ def create_name(args):
 
 
 def preprocess_tables_lists(args, table_list):
-    logging.debug(f"Table list: {table_list!r}")
-    logging.verbose(f"Tables found: {len(table_list)}")
+    logger.debug("Table list: %r", table_list)
+    logger.verbose("Tables found: %r", len(table_list))
 
     tables = set(table_list)
     config = tables.intersection(zabbix.config)
     monitoring = tables.intersection(zabbix.monitoring)
     unknown = tables.difference(config, monitoring)
 
-    logging.verbose(f"Config tables: {len(config)}")
-    logging.verbose(f"Monitoring tables: {len(monitoring)}")
-    logging.verbose(f"Unknown tables: {len(unknown)}")
+    logger.verbose("Config tables: %d", len(config))
+    logger.verbose("Monitoring tables: %d", len(monitoring))
+    logger.verbose("Unknown tables: %d", len(unknown))
 
     nodata, ignore, fail = [], [], []
     if args.monitoring == "nodata":
@@ -363,7 +336,7 @@ def preprocess_tables_lists(args, table_list):
     if args.unknown == "nodata":
         nodata += unknown
     elif args.unknown == "ignore":
-        ignore += unknown 
+        ignore += unknown
     elif args.unknown == "fail":
         fail += unknown
 
@@ -373,7 +346,7 @@ def preprocess_tables_lists(args, table_list):
 def pretty_log_args(args):
     """Print arguments via 'logging.info' in a readable way"""
 
-    keys = args._keys
+    keys = args._keys # pylint: disable=W0212:protected-access
 
     str_args = ["Arguments:"]
     for key in keys:
@@ -390,4 +363,4 @@ def pretty_log_args(args):
     #        continue
     #    str_args.append(f"    {key:<24}: {value}")
 
-    logging.verbose("\n".join(str_args))
+    logger.verbose("\n".join(str_args))

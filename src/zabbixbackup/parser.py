@@ -1,11 +1,13 @@
 import argparse
 from pathlib import Path
+import logging
 
 from .parser_defaults import PSqlArgs, MySqlArgs
 from .parser_post import postprocess
 
+logger = logging.getLogger(__name__)
 
-_description = "zabbix dump for {dbms} inspired and directly translated from..."
+_DESCRIPTION = "zabbix dump for {dbms} inspired and directly translated from..."
 
 
 def parse(argv):
@@ -37,15 +39,14 @@ def parse(argv):
     elif dbms in ("mysql", ):
         args = MySqlArgs()
         args.scope["dbms"] = "mysql"
-        pass
     else:
-        raise NotImplemented(f"DBMS {dbms} not supported")
+        raise NotImplementedError(f"DBMS {dbms} not supported")
 
     sub_parser = build_sub_parser(args)
     args.scope["parser"] = sub_parser
 
     temp_args = sub_parser.parse_args(subargv)
-    
+
     try:
         _defaults = temp_args.__dict__
         _blanks = dict((key, None) for key in temp_args.__dict__.keys())
@@ -55,6 +56,7 @@ def parse(argv):
         sub_parser.set_defaults(**_defaults)
 
     except Exception:
+        # pylint: disable=W0707:raise-missing-from
         raise ValueError(
             "Parse error: should never happen here."
             "Really.. something is wrong.")
@@ -69,7 +71,7 @@ def build_parser():
 
     parser = argparse.ArgumentParser(
         "zabbixbackup",
-        description=_description.format(dbms="postgres or mysql"))
+        description=_DESCRIPTION.format(dbms="postgres or mysql"))
 
     subparsers = parser.add_subparsers(title='DBMS', dest="dbms", required=True)
 
@@ -102,7 +104,7 @@ def build_sub_parser(args):
     parser = argparse.ArgumentParser(
         f"zabbixbackup {dbms}",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=_description.format(dbms=dbms))
+        description=_DESCRIPTION.format(dbms=dbms))
 
     parser.add_argument(
         "-z", "--read-zabbix-config",
@@ -179,7 +181,7 @@ def build_sub_parser(args):
         help="database login password (specify '-' for an interactive prompt).",
         default=args.passwd)
 
-    login_file = ".pgpass" if dbms == "psql" else "mylogin.cnf" 
+    login_file = ".pgpass" if dbms == "psql" else "mylogin.cnf"
     connection.add_argument(
         "--keep-login-file",
         help=f"if a credential file is created ({login_file}) do not "
@@ -276,7 +278,7 @@ def build_sub_parser(args):
         default=args.files)
 
     output = parser.add_argument_group("output options")
-    
+
     output.add_argument(
         "-a", "--archive",
         help="archive level compression. 'tar' to create a tar archive, "

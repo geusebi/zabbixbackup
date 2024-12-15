@@ -11,22 +11,24 @@ from .utils import (
     preprocess_tables_lists, process_repr, try_find_sockets,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def backup_postgresql(args):
-    logging.info(f"DBMS: Postgresql")
+    logger.info("DBMS: Postgresql")
     if not check_binary("psql", "pg_dump"):
         return 1, "Missing binaries: check 'psql' and 'pg_dump' are available and in PATH"
 
     args.scope["env"] = {}
-    
+
     # Phase 0: setup authentication
     _psql_auth(args)
 
     # Informational data about an eventual connection via socket
     if args.host == "" or args.host == "localhost" or args.host.startswith("/"):
         sockets = try_find_sockets("postgres", args.port)
-        logging.info(f"sockets (actual choice performed directly by postgresql): ")
-        logging.info(f"    {sockets!r}")
+        logger.info("sockets (actual choice performed directly by postgresql): ")
+        logger.info("    %r", sockets)
 
 
     # Phase 1: Fetch database version and assign a name
@@ -36,13 +38,13 @@ def backup_postgresql(args):
         return 2, "Could not retrieve db version (see logs)"
 
     version, _ = parse_zabbix_version(raw_version)
-    with open("zabbix_dbversion", "w") as fh:
+    with open("zabbix_dbversion", "w", encoding="utf-8") as fh:
         fh.writelines(["postgres\n", "{version}\n"])
 
-    logging.info(f"Zabbix version: {version}")
+    logger.info("Zabbix version: %s", version)
 
     # Phase 2: Perform the actual backup
-    
+
     # select and filter tables: done here and passed to _pg_dump for simplicity
     table_list_query = (
         f"SELECT table_name FROM information_schema.tables "
@@ -96,12 +98,11 @@ def _psql_auth(args):
         fh.writelines([
                 # TODO: socket?
                 f"{args.host}:{args.port}:{args.dbname}:{args.user}:{args.passwd}\n",
-                "",
             ])
         fh.close()
-        
+
         abs_pgpass = pgpass_path.absolute()
-        atexit.register(lambda: abs_pgpass.unlink())
+        atexit.register(abs_pgpass.unlink)
 
         args.loginfile = pgpass_path
         args.scope["env"] = {"PGPASSFILE": str(pgpass_path)}
@@ -211,4 +212,4 @@ def _pg_dump(
     dump = DPopen(dump_cmd, env=dump_env)
     dump.communicate()
 
-    return dump.returncode == 0 
+    return dump.returncode == 0

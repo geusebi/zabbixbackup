@@ -1,8 +1,8 @@
+import sys
 from pathlib import Path
 import logging
 from getpass import getpass
 from .parser_defaults import PSqlArgs, MySqlArgs
-import sys
 
 
 __all__ = ["postprocess"]
@@ -30,7 +30,7 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
     #   5. from this script default
     #
     # I.e. CLI arguments are the most important.
-    
+
     # Precedence lists in the form of {key: [values...]}
     # where local_args[key][0] is the selected final value
 
@@ -38,6 +38,7 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
     if user_args.host == "-":
         user_args.host = ""
 
+    # pylint: disable=C0325:superfluous-parens
     # Check port limits
     if user_args.port is not None and not (1024 <= user_args.port <= 65535):
         raise parser.error(f"Port must be between 1024 and 65535: {user_args.port!r}")
@@ -56,7 +57,7 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
         user_args.save_files = True
         user_args.files = Path(user_args.files)
 
-    
+
     for key, value in vars(user_args).items():
         if value is not None:
             setattr(args, key, value)
@@ -76,7 +77,7 @@ def postprocess(args: PSqlArgs|MySqlArgs, user_args):
     # Handle archiving and compression, set archive type and compression level
     _handle_archiving(args)
 
-    # Checks whether the output directory is a directory or 
+    # Checks whether the output directory is a directory or
     # that it can be created (parent exists and is a directory)
     _handle_output(args)
 
@@ -96,7 +97,7 @@ def _parse_compression(parser, compr):
         algo = compr
         level = "6"
     elif ":" in compr:
-        algo, level = compr.split(":")    
+        algo, level = compr.split(":")
     else: # assume level format (checked below)
         algo = "gzip"
         level = compr
@@ -123,7 +124,7 @@ def _parse_compression(parser, compr):
 
 def _handle_mysqlcompression(args):
     parser = args.scope["parser"]
-    
+
     if args.mysqlcompression == "-":
         args.scope["mysqlcompression"] = None
         return
@@ -135,7 +136,7 @@ def _handle_mysqlcompression(args):
 def _handle_archiving(args):
     parser = args.scope["parser"]
 
-    # Uncompressed folder 
+    # Uncompressed folder
     if args.archive == "-":
         args.scope["archive"] = None
         return
@@ -156,7 +157,7 @@ def _handle_verbosity(args):
         logger.setLevel(logging.ERROR)
     elif args.very_verbose:
         args.verbosity = "very"
-        logger.setLevel(logging.VERBOSE)
+        logger.setLevel(logging.VERBOSE) # pylint: disable=E1101
     elif args.debug:
         args.verbosity = "debug"
         logger.setLevel(logging.DEBUG)
@@ -202,7 +203,7 @@ def _handle_zabbix_conf(args, user_args):
             zconfig["dbms"] = zconfig["sock"]
             del zconfig["sock"]
 
-    # Copy value from the config if it isn't provided by the user  
+    # Copy value from the config if it isn't provided by the user
     for key, value in zconfig.items():
         user_value = getattr(user_args, key, None)
         if user_value is None:
@@ -223,7 +224,7 @@ def _zabbix_try_read_config(path):
         for line in map(str.strip, fh):
             if line == "" or line.startswith("#"):
                 continue
-            
+
             key, eq, value = map(str.strip, line.partition("="))
             if eq == "=" and len(key) and len(value):
                 config[key] = value

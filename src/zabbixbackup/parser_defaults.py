@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 # (these are important to allow to separate user provided values during parsing)
 # 'dest' name actions in parsers must be the same as in these dataclasses
 
+# pylint: disable=W0212:protected-access
+
 @dataclass
 class PSqlArgs(object):
     read_zabbix_config: bool = False

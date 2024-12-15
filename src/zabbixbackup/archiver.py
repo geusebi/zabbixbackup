@@ -1,9 +1,12 @@
 from os import environ
 from pathlib import Path
-from .utils import DPopen, run
-from .utils import build_tar_command, process_repr
 from shutil import rmtree
 import logging
+
+from .utils import DPopen, run
+from .utils import build_tar_command, process_repr
+
+logger = logging.getLogger(__name__)
 
 
 def parse_save_files(files):
@@ -13,7 +16,7 @@ def parse_save_files(files):
     One item per line.
     Spaces are trimmed and blank lines or lines starting with a # are ignored.
     """
-    with open(files, "r") as fh:
+    with open(files, "r", encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
             if line.startswith("#"):
@@ -35,18 +38,18 @@ def save_files(args):
         copy_files(files, Path("host_root"))
 
 
-def copy_files(save_files, base_dir):
+def copy_files(files_index, base_dir):
     """
     Copy a list of files or directories in base_dir.
 
     Directory structure is replicated.
     """
     base_dir = base_dir.absolute()
-    items = parse_save_files(save_files)
+    items = parse_save_files(files_index)
 
     for item in items:
         if not item.exists():
-            logging.info(f"Filepath not found {item}, ignoring...")
+            logger.info("Filepath not found %s, ignoring...", item)
             continue
 
         dest = base_dir / item.absolute().relative_to("/")
@@ -56,9 +59,9 @@ def copy_files(save_files, base_dir):
 
         # TODO: remove dependency on cp?
         if run(["cp", "-a", str(item), str(dest)]) is None:
-            logging.warning(f"Cannot copy {item}, ignoring...")
+            logger.warning("Cannot copy %s, ignoring...", item)
         else:
-            logging.info(f"Copying {item}")
+            logger.info("Copying %s", item)
 
 
 def archive(archive_dir, args):
@@ -77,15 +80,15 @@ def archive(archive_dir, args):
         tar_cmd = cmd + (name_ext, name, )
         tar_env = {**environ, **env}
 
-        logging.debug(f"Archive command: \n{process_repr(tar_cmd, env)}\n")
+        logger.debug("Archive command: \n%s\n", process_repr(tar_cmd, env))
 
         archive_exec = DPopen(tar_cmd, env=tar_env)
         archive_exec.communicate()
 
         if archive_exec.returncode == 0:
-            logging.debug(f"Delete plain folder archive: {archive_dir}\n")
+            logger.debug("Delete plain folder archive: %s\n", archive_dir)
             rmtree(archive_dir)
-        
+
         return Path(name_ext).absolute()
 
     # Leave as plain directory
