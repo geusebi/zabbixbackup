@@ -319,7 +319,7 @@ Mysql dump compression.
 `-` to leave the dump uncompressed as is.
 
 Available compression formats are `xz`, `gzip` and `bzip2`.
-Use `:&lt;LEVEL&gt;` to set a compression.
+Use `:<LEVEL>` to set a compression.
 
 The compression binary must be available in current shell.
 `xz`, `gzip`, and `bzip2` will take precedence and `7z` is used as fallback (might be useful on Windows platforms).
@@ -406,7 +406,7 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
                          [-N] [-x PGCOMPRESSION]
-                         [-f {custom,directory,tar,plain}] [--save-files]
+                         [-f {directory,tar,custom,plain}] [--save-files]
                          [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
                          [-q | -v | -V | --debug]
 
@@ -463,7 +463,7 @@ dump level compression options:
   -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
                         passed as-is to pg_dump --compress, might be implied
                         by format. (default: None)
-  -f {custom,directory,tar,plain}, --pgformat {custom,directory,tar,plain}
+  -f {directory,tar,custom,plain}, --pgformat {directory,tar,custom,plain}
                         dump format, will mandate the file output format.
                         (default: custom)
 
