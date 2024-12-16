@@ -67,9 +67,9 @@ DBMS:
 usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [-u USER] [-p PASSWD] [--keep-login-file]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
-                         [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
-                         [-N] [-x PGCOMPRESSION]
-                         [-f {directory,tar,custom,plain}] [--save-files]
+                         [--name NAME] [-U {dump,nodata,ignore,fail}]
+                         [-M {dump,nodata}] [-N] [-x PGCOMPRESSION]
+                         [-f {custom,plain,directory,tar}] [--save-files]
                          [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
                          [-q | -v | -V | --debug]
 
@@ -113,6 +113,8 @@ connection options:
                         database schema. (default: public)
   -n, --reverse-lookup  (NOT IMPLEMENTED) perform a reverse lookup of the IP
                         address for the host. (default: True)
+  --name NAME           use this name instead of 'host' for the backup name.
+                        (allowed alphanum, -, .) (default: None)
 
 dump action options:
   -U {dump,nodata,ignore,fail}, --unknown-action {dump,nodata,ignore,fail}
@@ -126,7 +128,7 @@ dump level compression options:
   -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
                         passed as-is to pg_dump --compress, might be implied
                         by format. (default: None)
-  -f {directory,tar,custom,plain}, --pgformat {directory,tar,custom,plain}
+  -f {custom,plain,directory,tar}, --pgformat {custom,plain,directory,tar}
                         dump format, will mandate the file output format.
                         (default: custom)
 
@@ -167,10 +169,11 @@ usage: zabbixbackup mysql [-h] [-z] [-Z ZBX_CONFIG] [-c] [-C MYSQL_CONFIG]
                           [-D] [-H HOST] [-P PORT] [-S SOCK] [-u USER]
                           [-p PASSWD] [--keep-login-file]
                           [--login-file LOGINFILE] [-d DBNAME] [-n]
-                          [-U {dump,nodata,ignore,fail}] [-M {dump,nodata}]
-                          [-N] [--mysqlcompression MYSQLCOMPRESSION]
-                          [--save-files] [--files FILES] [-a ARCHIVE]
-                          [-o OUTDIR] [-r ROTATE] [-q | -v | -V | --debug]
+                          [--name NAME] [-U {dump,nodata,ignore,fail}]
+                          [-M {dump,nodata}] [-N]
+                          [--mysqlcompression MYSQLCOMPRESSION] [--save-files]
+                          [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
+                          [-q | -v | -V | --debug]
 
 zabbix dump for mysql inspired and directly translated from...
 
@@ -217,6 +220,8 @@ connection options:
                         database name. (default: zabbix)
   -n, --reverse-lookup  (NOT IMPLEMENTED) perform a reverse lookup of the IP
                         address for the host. (default: True)
+  --name NAME           use this name instead of 'host' for the backup name.
+                        (allowed alphanum, -, .) (default: None)
 
 dump action options:
   -U {dump,nodata,ignore,fail}, --unknown-action {dump,nodata,ignore,fail}
