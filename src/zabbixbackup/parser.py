@@ -217,6 +217,12 @@ def build_sub_parser(args):
         default=args.rlookup,
         dest="rlookup")
 
+    connection.add_argument(
+        "--name",
+        help="use this name instead of 'host' for the backup name. "
+            "(allowed alphanum, -, .)",
+        default=args.name)
+
 
     dump = parser.add_argument_group("dump action options")
 

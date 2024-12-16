@@ -13,7 +13,7 @@ logger = logging.getLogger()
 
 re_cfg = re.compile(r"""
     zabbix_                             # suffix
-    (?P<host>[^_]+?)_                   # host name
+    (?P<hostorname>[^_]+?)_             # host name
     (?P<year>[0-9]{4})                  # yearmonthday-hourminutesecond
     (?P<month>[0-9]{2})                 #
     (?P<day>[0-9]{2})-                  #
@@ -34,7 +34,7 @@ def rotate(args: Union[PSqlArgs, MySqlArgs]):
     if n <= 0:
         return
 
-    host = args.host
+    name = args.name if args.name is not None else args.host
 
     # create a list of tuples in the form of [(datetime as int, folder)]
     # in order to being able to sort it naturally
@@ -42,7 +42,7 @@ def rotate(args: Union[PSqlArgs, MySqlArgs]):
     for archive in Path(".").iterdir():
         if match := re_cfg.fullmatch(archive.name):
             d = match.groupdict()
-            if d["host"] == host:
+            if d["hostorname"] == name:
                 int_dt = int(
                     f"{d['year']}{d['month']}{d['day']}"
                     f"{d['hour']}{d['minute']}{d['second']}"
@@ -62,7 +62,7 @@ def rotate(args: Union[PSqlArgs, MySqlArgs]):
             if item.is_file():
                 item.unlink()
             else:
-                rmtree(item)
+                rmtree(item, ignore_errors=True)
 
     for _, item in keep:
         logger.debug("    keeping backup '%s'", item)

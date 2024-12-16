@@ -28,6 +28,7 @@ class PSqlArgs:
     dbname: str                 = "zabbix"
     schema: str                 = "public"
     rlookup: bool               = True
+    name: Optional[str]         = None
 
     save_files: bool            = False
     files: Path                 = "-"
@@ -52,7 +53,7 @@ class PSqlArgs:
 PSqlArgs._keys = [
     "read_zabbix_config", "zabbix_config",
     "host", "port", "user", "passwd", "keeploginfile", "loginfile",
-    "dbname", "schema", "rlookup",
+    "dbname", "schema", "rlookup", "name",
     "save_files", "files",
     "unknown", "monitoring",
     "columns", "pgformat", "pgcompression",
@@ -79,6 +80,7 @@ class MySqlArgs:
     loginfile: Optional[Path]   = None
     dbname: str                 = "zabbix"
     rlookup: bool               = True
+    name: Optional[str]         = None
 
     save_files: bool            = False
     files: Path                 = "-"
@@ -102,7 +104,7 @@ class MySqlArgs:
 MySqlArgs._keys = [
     "read_zabbix_config", "zabbix_config", "read_mysql_config", "mysql_config",
     "host", "port", "sock", "user", "passwd", "keeploginfile", "loginfile",
-    "dbname", "rlookup",
+    "dbname", "rlookup", "name",
     "save_files", "files",
     "unknown", "monitoring",
     "columns", "mysqlcompression",

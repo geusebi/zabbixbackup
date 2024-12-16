@@ -205,6 +205,8 @@ def parse_zabbix_version(query_result):
 def create_name(args):
     """Create a suitable name for a backup."""
     dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+    if args.name is not None:
+        return f"zabbix_{args.name}_{dt}"
     return f"zabbix_{args.host}_{dt}"
 
 

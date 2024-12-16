@@ -4,8 +4,12 @@ from pathlib import Path
 import logging
 from getpass import getpass
 from typing import Union
+import re
 from .parser_defaults import PSqlArgs, MySqlArgs
 from . import console_logger
+
+logger = logging.getLogger()
+
 
 __all__ = ["postprocess"]
 
@@ -75,6 +79,16 @@ def postprocess(args: Union[PSqlArgs, MySqlArgs], user_args):
 
     if dbms == "mysql":
         _handle_mysqlcompression(args)
+
+    # Check if name is valid
+    if args.name is not None:
+        valid = re.fullmatch(r"^[a-zA-Z0-9.-]+$", args.name)
+        if valid is None:
+            parser.error(
+                f"Invalid name (allowed alphanum, -, .): {args.name!r}"
+            )
+        if args.rlookup:
+            logger.warning("Ignoring rlookup ('name' provided)")
 
     # Handle archiving and compression, set archive type and compression level
     _handle_archiving(args)
