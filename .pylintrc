@@ -4,3 +4,7 @@
 disable=
     fixme,
     unknown-option-value
+
+per-file-ignores = """
+  /src/zabbixbackup/tests/:attribute-defined-outside-init,magic-value-comparison,missing-class-docstring,missing-function-docstring,protected-access,unexpected-keyword-arg
+"""
