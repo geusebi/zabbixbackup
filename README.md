@@ -1,6 +1,9 @@
 # Zabbix backup python script
 
-[![Pylint](https://github.com/geusebi/zabbixbackup/actions/workflows/pylint.yml/badge.svg)](https://github.com/geusebi/zabbixbackup/actions/workflows/pylint.yml)
+[![Tox unittest](https://github.com/geusebi/zabbixbackup/actions/workflows/tox-unittest.yml/badge.svg?event=push
+)](https://github.com/geusebi/zabbixbackup/actions/workflows/tox-unittest.yml/badge.svg?event=push)
+
+[![Pylint](https://github.com/geusebi/zabbixbackup/actions/workflows/pylint.yml/badge.svg?event=push)](https://github.com/geusebi/zabbixbackup/actions/workflows/pylint.yml?event=push)
 
 *EXPERIMENTAL: use at your own risk!*
 
