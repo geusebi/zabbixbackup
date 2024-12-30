@@ -1,5 +1,7 @@
 # Zabbix backup python script
 
+[![Pylint](https://github.com/geusebi/zabbixbackup/actions/workflows/pylint.yml/badge.svg)](https://github.com/geusebi/zabbixbackup/actions/workflows/pylint.yml)
+
 *EXPERIMENTAL: use at your own risk!*
 
 Python script to perform zabbix dumps.
@@ -419,7 +421,7 @@ usage: zabbixbackup psql [-h] [-z] [-Z ZBX_CONFIG] [-D] [-H HOST] [-P PORT]
                          [--login-file LOGINFILE] [-d DBNAME] [-s SCHEMA] [-n]
                          [--name NAME] [-U {dump,nodata,ignore,fail}]
                          [-M {dump,nodata}] [-N] [-x PGCOMPRESSION]
-                         [-f {custom,plain,directory,tar}] [--save-files]
+                         [-f {plain,custom,directory,tar}] [--save-files]
                          [--files FILES] [-a ARCHIVE] [-o OUTDIR] [-r ROTATE]
                          [-q | -v | -V | --debug]
 
@@ -478,7 +480,7 @@ dump level compression options:
   -x PGCOMPRESSION, --pgcompression PGCOMPRESSION
                         passed as-is to pg_dump --compress, might be implied
                         by format. (default: None)
-  -f {custom,plain,directory,tar}, --pgformat {custom,plain,directory,tar}
+  -f {plain,custom,directory,tar}, --pgformat {plain,custom,directory,tar}
                         dump format, will mandate the file output format.
                         (default: custom)
 
