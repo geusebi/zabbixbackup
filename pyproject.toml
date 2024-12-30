@@ -37,6 +37,8 @@ Issues = "https://github.com/geusebi/zabbixbackup/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["*"]
+exclude = ["zabbixbackup.tests"]
 
 [tool.setuptools.package-data]
 zabbixbackup = ["assets/zabbix_server.conf", "assets/files"]
