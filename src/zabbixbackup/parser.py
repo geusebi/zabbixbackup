@@ -96,6 +96,7 @@ def build_parser():
     return _parser
 
 
+# pylint: disable-next=too-many-statements
 def build_sub_parser(args):
     """
     Create the parser according to user selection (by @build_parser).

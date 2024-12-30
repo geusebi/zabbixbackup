@@ -14,6 +14,7 @@ logger = logging.getLogger()
 __all__ = ["postprocess"]
 
 
+# pylint: disable-next=too-many-branches
 def postprocess(args: Union[PSqlArgs, MySqlArgs], user_args):
     """
     Adjust the arguments according to zabbix behaviour and user selection.
