@@ -22,10 +22,12 @@ class TestRotation(unittest.TestCase):
         self.tmp_dir = mkdtemp(prefix="test_rotate_", dir=self.root)
         self.test_root = Path(self.tmp_dir).absolute()
 
+
     def tearDown(self):
         os.chdir(self.root)
         rmtree(self.test_root)
         return super().tearDown()
+
 
     def test_rotate_keep_everything(self):
         test_bed = self.test_root / "keep_everything"
@@ -108,7 +110,7 @@ class TestRotation(unittest.TestCase):
 
 
     def test_rotate_multiple_formats(self):
-        test_bed = self.test_root / "keep_many"
+        test_bed = self.test_root / "multiple_formats"
         test_bed.mkdir()
 
         os.chdir(test_bed)
