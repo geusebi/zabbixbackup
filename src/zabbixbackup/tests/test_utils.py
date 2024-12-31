@@ -1,8 +1,9 @@
 # pylint: disable=missing-module-docstring,missing-function-docstring,missing-class-docstring
-# pylint: disable=unused-import
+# pylint: disable=unused-import,protected-access
 import unittest
 import logging
 from types import SimpleNamespace as NS
+import datetime
 from .. import console_logger
 from ..utils import (
     build_compress_command, build_tar_command, create_name, parse_zabbix_version
@@ -150,16 +151,39 @@ class TestParseZabbixVersion(unittest.TestCase):
                 self.assertEqual(result, expected)
 
 
+class TZUTC(datetime.tzinfo):
+    """Dummy timezone to test deterministically."""
+    # pylint: disable=unused-argument
+    _offset = datetime.timedelta(0)
+    _dst = datetime.timedelta(0)
+    _name = "UTC"
+
+    def utcoffset(self, *args):
+        return self.__class__._offset
+
+    def dst(self, *args):
+        return self.__class__._dst
+
+    def tzname(self, *args):
+        return self.__class__._name
+
+
 class TestCreateName(unittest.TestCase):
     def test_create_name(self):
         args = NS(name=None, host="127.0.0.1")
         in_out_pairs = (
-            (1735658751, "zabbix_127.0.0.1_20241231-162551", ),
-            (1234567890, "zabbix_127.0.0.1_20090214-003130", ),
-            (0, "zabbix_127.0.0.1_19700101-010000", ),
+            (1735658751, "zabbix_127.0.0.1_20241231-152551", ),
+            (1234567890, "zabbix_127.0.0.1_20090213-233130", ),
+            (0, "zabbix_127.0.0.1_19700101-000000", ),
         )
 
         for ts, expected in in_out_pairs:
             with self.subTest(f"timestamp {ts!r}"):
-                result = create_name(args, ts=ts)
+                result = create_name(args, ts=ts, tz=TZUTC())
                 self.assertEqual(result, expected)
+
+        # test current time (via regex)
+        with self.subTest(f"now {ts!r}"):
+            result = create_name(args)
+            regex = r"^zabbix_127\.0\.0\.1_[0-9]{8}-[0-9]{6}$"
+            self.assertRegex(expected, regex)
