@@ -6,7 +6,7 @@ import shutil
 import socket
 import subprocess
 from pathlib import Path
-from datetime import datetime, time
+from datetime import datetime
 from .tables import zabbix
 
 logger = logging.getLogger()
