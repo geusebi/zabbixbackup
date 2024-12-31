@@ -6,7 +6,7 @@ import shutil
 import socket
 import subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, time
 from .tables import zabbix
 
 logger = logging.getLogger()
@@ -209,12 +209,19 @@ def parse_zabbix_version(query_result):
     return version, (major, minor, revision)
 
 
-def create_name(args):
+def create_name(args, ts=None):
     """Create a suitable name for a backup."""
-    dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+    if ts is None:
+        dt = datetime.now()
+    else:
+        dt = datetime.fromtimestamp(ts)
+
+    dt_str = dt.strftime("%Y%m%d-%H%M%S")
+
     if args.name is not None:
-        return f"zabbix_{args.name}_{dt}"
-    return f"zabbix_{args.host}_{dt}"
+        return f"zabbix_{args.name}_{dt_str}"
+
+    return f"zabbix_{args.host}_{dt_str}"
 
 
 def preprocess_tables_lists(args, table_list):
