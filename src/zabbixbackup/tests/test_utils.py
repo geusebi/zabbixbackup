@@ -3,7 +3,9 @@
 import unittest
 import logging
 from .. import console_logger
-from ..utils import build_compress_command, build_tar_command, check_binary
+from ..utils import (
+    build_compress_command, build_tar_command, parse_zabbix_version
+)
 
 
 console_logger.setLevel(logging.ERROR)
@@ -131,3 +133,17 @@ class TestBuildTar(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             build_compress_command(
                 profile, check=False, strategy=tuple())
+
+
+class TestParseZabbixVersion(unittest.TestCase):
+    def test_parse_zabbix_version(self):
+        in_out_pairs = (
+            ("07020001", "7.2.1", ),
+            ("06040010", "6.4.10", ),
+            ("05020011", "5.2.11", ),
+        )
+
+        for raw, expected in in_out_pairs:
+            with self.subTest(f"version {raw!r}"):
+                result, _ = parse_zabbix_version((raw, ))
+                self.assertEqual(result, expected)
