@@ -2,9 +2,10 @@
 # pylint: disable=unused-import
 import unittest
 import logging
+from types import SimpleNamespace as NS
 from .. import console_logger
 from ..utils import (
-    build_compress_command, build_tar_command, parse_zabbix_version
+    build_compress_command, build_tar_command, create_name, parse_zabbix_version
 )
 
 
@@ -146,4 +147,19 @@ class TestParseZabbixVersion(unittest.TestCase):
         for raw, expected in in_out_pairs:
             with self.subTest(f"version {raw!r}"):
                 result, _ = parse_zabbix_version((raw, ))
+                self.assertEqual(result, expected)
+
+
+class TestCreateName(unittest.TestCase):
+    def test_create_name(self):
+        args = NS(name=None, host="127.0.0.1")
+        in_out_pairs = (
+            (1735658751, "zabbix_127.0.0.1_20241231-162551", ),
+            (1234567890, "zabbix_127.0.0.1_20090214-003130", ),
+            (0, "zabbix_127.0.0.1_19700101-010000", ),
+        )
+
+        for ts, expected in in_out_pairs:
+            with self.subTest(f"timestamp {ts!r}"):
+                result = create_name(args, ts=ts)
                 self.assertEqual(result, expected)
