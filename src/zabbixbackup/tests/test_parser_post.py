@@ -3,9 +3,8 @@
 import unittest
 import logging
 from types import SimpleNamespace as NS
-from . import TZUTC
-from .. import console_logger, logger
-from ..parser_post import _handle_mysqlcompression, _parse_compression
+from .. import console_logger
+from ..parser_post import _handle_archiving, _handle_mysqlcompression, _parse_compression
 
 
 console_logger.setLevel(logging.ERROR)
@@ -81,3 +80,31 @@ class TestParserPost(unittest.TestCase):
             _handle_mysqlcompression(mock_args)
 
             self.assertEqual(None, mock_args.scope["mysqlcompression"])
+
+    def test__handle_archiving(self):
+        # other params combinations are tested in '_parse_compression'
+        # just checks whether there is an output or not
+        inputs = (
+            "tar",
+            "xz",
+            "gzip",
+            "bzip2",
+        )
+
+        mock_args = NS(scope={"parser": self.mock_parser}, archive=None)
+        for param in inputs:
+            with self.subTest(f"input: {param!r}"):
+                mock_args.archive = param
+                mock_args.scope["archive"] = None
+
+                _handle_archiving(mock_args)
+
+                self.assertNotEqual(None, mock_args.scope["archive"])
+
+        with self.subTest(f"input: {'-'!r}"):
+            mock_args.archive = "-"
+            mock_args.scope["archive"] = None
+
+            _handle_archiving(mock_args)
+
+            self.assertEqual(None, mock_args.scope["archive"])
