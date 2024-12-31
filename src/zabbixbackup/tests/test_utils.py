@@ -3,7 +3,7 @@
 import unittest
 import logging
 from types import SimpleNamespace as NS
-import datetime
+from . import TZUTC
 from .. import console_logger
 from ..utils import (
     build_compress_command, build_tar_command, create_name, parse_zabbix_version
@@ -149,23 +149,6 @@ class TestParseZabbixVersion(unittest.TestCase):
             with self.subTest(f"version {raw!r}"):
                 result, _ = parse_zabbix_version((raw, ))
                 self.assertEqual(result, expected)
-
-
-class TZUTC(datetime.tzinfo):
-    """Dummy timezone to test deterministically."""
-    # pylint: disable=unused-argument
-    _offset = datetime.timedelta(0)
-    _dst = datetime.timedelta(0)
-    _name = "UTC"
-
-    def utcoffset(self, *args):
-        return self.__class__._offset
-
-    def dst(self, *args):
-        return self.__class__._dst
-
-    def tzname(self, *args):
-        return self.__class__._name
 
 
 class TestCreateName(unittest.TestCase):
