@@ -143,7 +143,7 @@ def rlookup(ipaddr):
     return None
 
 
-def build_compress_command(profile):
+def build_compress_command(profile, check=True, strategy=("standard", "fallback")):
     """Helper function to prepare a compress command."""
     algo, level, extra = profile
 
@@ -152,15 +152,15 @@ def build_compress_command(profile):
     env = {}
     ext = extension[algo]
 
-    if check_binary(algo):
+    if "standard" in strategy and (not check or check_binary(algo)):
         cmd = (algo, f"-{level}", ) + extra
         pipe = cmd
         return env, ext, cmd, pipe
 
-    if check_binary("7z"):
+    if "fallback" in strategy and (not check or check_binary("7z")):
         cmd = ("7z", "a", f"-t{algo}", )
         pipe = ("7z", "a", f"-t{algo}", "-si", )
-        return env, cmd, ext, pipe
+        return env, ext, cmd, pipe
 
     raise NotImplementedError(f"Compression binary not available '{algo}'")
 

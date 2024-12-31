@@ -234,7 +234,7 @@ def _mysql_dump(
 
     # setup a compress command if needed
     if compressor_profile:
-        env, _, ext, compressor = build_compress_command(compressor_profile)
+        env, ext, _, compressor = build_compress_command(compressor_profile)
 
         compr_env = {**environ, **env_extra, **env}
         compr_cmd = compressor + (outpath.name + ext, )
