@@ -78,7 +78,7 @@ def archive(archive_dir, args):
     profile = scope["archive"]
 
     if profile is not None:
-        env, cmd, ext = build_tar_command(profile)
+        env, ext, cmd = build_tar_command(profile)
         name = archive_dir.name
         name_ext = name + ext
         tar_cmd = cmd + (name_ext, name, )

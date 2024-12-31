@@ -165,15 +165,22 @@ def build_compress_command(profile, check=True, strategy=("standard", "fallback"
     raise NotImplementedError(f"Compression binary not available '{algo}'")
 
 
-def build_tar_command(profile):
+# pylint: disable-next=too-many-locals
+def build_tar_command(profile, check=True, strategy=("tar", )):
     """Helper function to prepare a tar/compress command."""
-    if not check_binary("tar"):
-        raise NotImplementedError("Missing tar command")
+    binary = None
+
+    if "tar" in strategy:
+        if not check or (check and check_binary("tar")):
+            binary = "tar"
+
+    if binary is None:
+        raise NotImplementedError("'tar' binary not available")
 
     algo, level, extra = profile
 
     if algo == "tar":
-        return {}, ("tar", "-cf", ), ".tar"
+        return {}, ".tar", (binary, "-cf", )
 
     extension = {"xz": ".tar.xz", "gzip": ".tar.gz", "bzip2": ".tar.bz2"}
     env_map = {"xz": "XZ_OPT", "gzip": "GZIP", "bzip2": "BZIP2"}
@@ -185,9 +192,9 @@ def build_tar_command(profile):
 
     env = {compr_env_var: compr_flags}
     ext = extension[algo]
-    cmd = ("tar", f"-c{tar_flag}f", )
+    cmd = (binary, f"-c{tar_flag}f", )
 
-    return env, cmd, ext
+    return env, ext, cmd
 
 
 def parse_zabbix_version(query_result):
