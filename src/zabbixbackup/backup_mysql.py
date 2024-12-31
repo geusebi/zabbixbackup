@@ -14,12 +14,12 @@ from .utils import (
     preprocess_tables_lists, process_repr,
 )
 
-# pylint: disable=R0801
+# pylint: disable=duplicate-code
 
 logger = logging.getLogger()
 
 
-# pylint: disable=R0914:too-many-locals, R0911:too-many-return-statements
+# pylint: disable=too-many-locals,too-many-return-statements
 def backup_mysql(args):
     """Perform a MySQL or MariaSQL dump in the current directory."""
     logger.info("DBMS: MySQL or MariaSql")
@@ -177,7 +177,7 @@ def _mysql_query(args, query, description="query", log_func=logging.debug):
     return stdout.splitlines()
 
 
-# pylint: disable=R0913:too-many-arguments, R0917:too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def _mysql_dump(
     args, params, ignoring, outpath, description="dump cmd", log_func=logging.debug
 ):
@@ -247,7 +247,7 @@ def _mysql_dump(
     # either run a simple dump or a 'dump | compress'
     dump = DPopen(dump_cmd, env=dump_env, stdout=PIPE, text=True)
 
-    # pylint: disable=E0606, R1705
+    # pylint: disable=possibly-used-before-assignment,no-else-return
     if not compressor_profile:
         dump.communicate()
         return dump.returncode == 0

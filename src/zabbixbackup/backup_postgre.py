@@ -14,12 +14,12 @@ from .utils import (
     preprocess_tables_lists, process_repr, try_find_sockets,
 )
 
-# pylint: disable=R0801
+# pylint: disable=duplicate-code
 
 logger = logging.getLogger()
 
 
-# pylint: disable=R0914:too-many-locals, R0911:too-many-return-statements
+# pylint: disable=too-many-locals,too-many-return-statements
 def backup_postgresql(args):
     """Perform a PostgreSQL dump in the current directory."""
     logger.info("DBMS: Postgresql")
@@ -184,7 +184,7 @@ def _pg_dump(
     ext = extensions[args.pgformat]
 
     # try to guess the correct extension in case of dump compression,
-    # good enough, might fail in some edge cases
+    # good enough, might fail for some edge cases
     compr_ext = ""
     if args.pgcompression is not None and args.pgformat == "plain":
         algo, _, detail = args.pgcompression.partition(":")
