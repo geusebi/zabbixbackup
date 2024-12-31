@@ -5,7 +5,7 @@ import datetime
 
 class TZUTC(datetime.tzinfo):
     """Dummy timezone to test deterministically."""
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument,protected-access
     _offset = datetime.timedelta(0)
     _dst = datetime.timedelta(0)
     _name = "UTC"
