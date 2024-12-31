@@ -209,12 +209,12 @@ def parse_zabbix_version(query_result):
     return version, (major, minor, revision)
 
 
-def create_name(args, ts=None):
+def create_name(args, ts=None, tz=None):
     """Create a suitable name for a backup."""
     if ts is None:
         dt = datetime.now()
     else:
-        dt = datetime.fromtimestamp(ts)
+        dt = datetime.fromtimestamp(ts, tz=tz)
 
     dt_str = dt.strftime("%Y%m%d-%H%M%S")
 
